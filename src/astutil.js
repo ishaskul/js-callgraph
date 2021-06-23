@@ -8,7 +8,7 @@
  * http://www.eclipse.org/legal/epl-2.0.
  *******************************************************************************/
 
-const esprima = require('esprima');
+const tsEstree = require('@typescript-eslint/typescript-estree');
 const fs = require('fs');
 const vueParser = require('vue-parser');
 const prep = require('./srcPreprocessor');
@@ -231,7 +231,7 @@ function ppPos(nd) {
 }
 
 /* Build as AST from a collection of source files */
-function astFromFiles(files, tolerant=false) {
+function astFromFiles(files) {
     const ast = {
         type: 'ProgramCollection',
         programs: [],
@@ -240,7 +240,7 @@ function astFromFiles(files, tolerant=false) {
 
     for (let file of files) {
         let src = fs.readFileSync(file, 'utf-8');
-        ast.programs.push(buildProgram(file, src, tolerant));
+        ast.programs.push(buildProgram(file, src));
     }
     init(ast);
     return ast;
@@ -279,12 +279,11 @@ function reportError(msg, err) {
 To avoid confusion caused by too many different parsing settings,
 please call this function whenever possible instead of rewriting esprima.parseModule...
 */
-function parse(src, tolerant=false) {
-    return esprima.parseModule(src, {
+function parse(src) {
+    return tsEstree.parse(src, {
         loc: true,
         range: true,
-        jsx: true,
-        tolerant: tolerant
+        jsx: true
     });
 }
 
@@ -297,7 +296,7 @@ Return:
     If succeeded, return an ast node of type 'Program'.
     If failed, return null.
 */
-function buildProgram (fname, src, tolerant=false) {
+function buildProgram (fname, src) {
     // trim hashbang
     src = prep.trimHashbangPrep(src);
     // extract script from .vue file
@@ -310,20 +309,10 @@ function buildProgram (fname, src, tolerant=false) {
         return null;
     }
 
-    // transpile typescript
-    try {
-        if (fname.endsWith('.ts'))
-            src = prep.typescriptPrep(fname, src);
-    }
-    catch (err) {
-        reportError('WARNING: Transpiling typescript failed.', err);
-        return null;
-    }
-
     // parse javascript
     let prog;
     try {
-        prog = parse(src, tolerant);
+        prog = parse(src);
     }
     catch(err) {
         reportError('Warning: Esprima failed to parse ' + fname, err);

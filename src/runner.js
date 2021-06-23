@@ -135,7 +135,7 @@ let build = function () {
         args.strategy = 'DEMAND';
     }
     if (args.time) console.time("parsing  ");
-    var ast = astutil.astFromFiles(files, args.tolerant);
+    var ast = astutil.astFromFiles(files);
     if (args.time) console.timeEnd("parsing  ");
 
     if (args.time) console.time("bindings ");

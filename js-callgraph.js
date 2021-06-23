@@ -81,14 +81,6 @@ argParser.add_argument(
 );
 
 argParser.add_argument(
-    '--tolerant',
-    {
-        action: 'store_true',
-        help: 'Enable parsing in tolerant mode'
-    }
-);
-
-argParser.add_argument(
     '-v', '--version',
     {
         action: 'version',

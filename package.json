@@ -1,11 +1,11 @@
 {
-  "name": "@persper/js-callgraph",
+  "name": "@gaborantal/js-callgraph",
   "version": "1.3.2",
   "description": "Builds static call graph for Javascript with a field-based algorithm.",
   "main": "index.js",
   "dependencies": {
-    "@babel/core": "^7.14.2",
-    "@babel/preset-flow": "^7.13.13",
+    "@babel/core": "^7.14.6",
+    "@babel/preset-flow": "^7.14.5",
     "@typescript-eslint/typescript-estree": "^4.28.0",
     "argparse": "^2.0.1",
     "babel-core": "^6.26.3",
@@ -13,7 +13,7 @@
     "vue-parser": "^1.1.6"
   },
   "devDependencies": {
-    "jest": "^26.6.3"
+    "jest": "^27.0.5"
   },
   "scripts": {
     "test": "jest && python3.7 ./tests/test.py"
@@ -23,13 +23,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Persper/js-callgraph.git"
+    "url": "git+https://github.com/gaborantal/js-callgraph.git"
   },
   "license": "EPL-2.0",
   "bugs": {
-    "url": "https://github.com/Persper/js-callgraph/issues"
+    "url": "https://github.com/gaborantal/js-callgraph/issues"
   },
-  "homepage": "https://github.com/Persper/js-callgraph#readme",
+  "homepage": "https://github.com/gaborantal/js-callgraph#readme",
   "keywords": [
     "call graph",
     "call",

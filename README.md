@@ -2,7 +2,8 @@
 
 
 [![Build Status](https://travis-ci.com/gaborantal/js-callgraph.svg?branch=master)](https://travis-ci.com/github/gaborantal/js-callgraph)
-[![NPM version](https://img.shields.io/badge/npm-v1.3.2-blue.svg)](https://www.npmjs.com/package/@persper/js-callgraph)
+[![Node.js Package](https://github.com/gaborantal/js-callgraph/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/gaborantal/js-callgraph/actions/workflows/npm-publish.yml)
+[![NPM version](https://img.shields.io/npm/v/jscg)](https://www.npmjs.com/package/jscg)
 [![License](https://img.shields.io/badge/license-EPL--2.0-green.svg)](https://www.eclipse.org/legal/epl-2.0/)
 
 This project implements a field-based call graph construction algorithm for JavaScript as described in
@@ -30,23 +31,23 @@ This repo builds upon [Max Schaefer](https://github.com/xiemaisi)'s original [ac
 
 ## Get Started (CLI)
 ```
-npm install -g @persper/js-callgraph
-js-callgraph -h # for a list of command line arguments
+npm install -g jscg
+jscg -h # for a list of command line arguments
 
 # Running on simple input scripts
-js-callgraph --cg input-scripts/simple-scripts/functioncall-arithmetic.js
+jscg --cg input-scripts/simple-scripts/functioncall-arithmetic.js
 
 # Running on a whole directory
-js-callgraph --cg input-scripts/fullcalendar/
+jscg --cg input-scripts/fullcalendar/
 
 # Running on mixed input
-js-callgraph --cg input-scripts/fullcalendar/fullcalendar/ input-scripts/fullcalendar/lib/jquery-2.1.0.js
+jscg --cg input-scripts/fullcalendar/fullcalendar/ input-scripts/fullcalendar/lib/jquery-2.1.0.js
 
 # Saving the result into a file
-js-callgraph --cg input-scripts/simple-scripts/functioncall-arithmetic.js --output filename.json
+jscg --cg input-scripts/simple-scripts/functioncall-arithmetic.js --output filename.json
 
 # Running on a whole directory with filtering
-js-callgraph --cg input-scripts/fullcalendar/ --filter filename.filter
+jscg --cg input-scripts/fullcalendar/ --filter filename.filter
 ```
 
 For an example of the output json, please see [here](#unified-json-format).

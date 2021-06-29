@@ -19,7 +19,8 @@ test_dirs = ['basics',
              'import-export/es6',
              'import-export/module.exports',
              'typescript',
-             'vue']
+#              'vue'
+             ]
 
 # Only consider test cases in the following languages
 langs = ['*.js', '*.ts', '*.vue']

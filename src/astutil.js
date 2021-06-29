@@ -10,8 +10,10 @@
 
 const tsEstree = require('@typescript-eslint/typescript-estree');
 const fs = require('fs');
-const vueParser = require('vue-parser');
+// const vueParser = require('vue-parser');
 const prep = require('./srcPreprocessor');
+// import vueParser from 'vue-parser'
+// const {vueParser} = require('vue-parser');
 
 /* AST visitor */
 function visit(root, visitor) {
@@ -297,12 +299,16 @@ Return:
     If failed, return null.
 */
 function buildProgram (fname, src) {
+    let prog;
+
     // trim hashbang
     src = prep.trimHashbangPrep(src);
     // extract script from .vue file
     try {
-        if (fname.endsWith('.vue'))
-            src = vueParser.parse(src, 'script');
+        if (fname.endsWith('.vue')) {
+            // src = vueParser.parse(src, 'module');
+            console.log("Not yet supported");
+        }
     }
     catch (err) {
         reportError('WARNING: Extracting <script> from .vue failed.', err);
@@ -310,13 +316,13 @@ function buildProgram (fname, src) {
     }
 
     // parse javascript
-    let prog;
-    try {
-        prog = parse(src);
-    }
-    catch(err) {
-        reportError('Warning: Esprima failed to parse ' + fname, err);
-        return null;
+    if (prog === undefined) {
+        try {
+            prog = parse(src);
+        } catch (err) {
+            reportError('Warning: Parsing failed for' + fname, err);
+            return null;
+        }
     }
     prog.attr = {filename: fname};
     return prog;

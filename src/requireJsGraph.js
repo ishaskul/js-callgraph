@@ -1,6 +1,6 @@
 const assert = require('assert');
 const astutil = require('./astutil');
-const _ = require('./underscore');
+const _ = require('underscore');
 const fs = require('fs');
 
 

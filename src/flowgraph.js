@@ -20,152 +20,170 @@ const symtab = require('./symtab');
 function addIntraproceduralFlowGraphEdges(ast, flow_graph) {
     flow_graph = flow_graph || new graph.FlowGraph();
     astutil.visit(ast, function (nd) {
-        switch (nd.type) {
-            case 'ArrayExpression':
-                for (var i = 0; i < nd.elements.length; ++i)
-                    if (nd.elements[i])
-                        flow_graph.addEdge(vertexFor(nd.elements[i]), propVertex({
-                            type: 'Literal',
-                            value: i
-                        }));
-                break;
+            switch (nd.type) {
+                case 'ArrayExpression':
+                    for (let i = 0; i < nd.elements.length; ++i)
+                        if (nd.elements[i]) {
+                            flow_graph.addEdge(vertexFor(nd.elements[i]), propVertex({
+                                type: 'Literal',
+                                value: i
+                            }));
+                        }
+                    break;
 
-            // R1
-            case 'AssignmentExpression':
-                if (nd.operator === '=')
-                    flow_graph.addEdges(vertexFor(nd.right), [vertexFor(nd.left), vertexFor(nd)]);
-                break;
-
-            // R9
-            case 'CallExpression':
-                if (nd.callee.type === 'MemberExpression')
-                    flow_graph.addEdge(vertexFor(nd.callee.object), argVertex(nd, 0));
-
-            // R8 FALL THROUGH
-            case 'NewExpression':
-                flow_graph.addEdge(vertexFor(nd.callee), calleeVertex(nd));
-                for (var i = 0; i < nd.arguments.length; ++i)
-                    flow_graph.addEdge(vertexFor(nd.arguments[i]), argVertex(nd, i + 1));
-                flow_graph.addEdge(resVertex(nd), vertexFor(nd));
-                break;
-
-            case 'CatchClause':
-                flow_graph.addEdge(unknownVertex(), varVertex(nd.param));
-                break;
-
-            // R3
-            case 'ConditionalExpression':
-                flow_graph.addEdge(vertexFor(nd.consequent), vertexFor(nd));
-                flow_graph.addEdge(vertexFor(nd.alternate), vertexFor(nd));
-                break;
-
-            // R7
-            case 'ClassDeclaration':
-            case 'ClassExpression':
-                var body = nd.body.body;
-                if (nd.id)
-                    for (let i = 0; i < body.length; ++i)
-                        if (body[i].kind === 'constructor')
-                            flow_graph.addEdge(funcVertex(body[i].value), vertexFor(nd.id));
-                break;
-
-            case 'FunctionDeclaration':
-                /* This check is needed for:
-                        export function () { ... }
-                   as it will not have an id but will be
-                   a FunctionDeclaration in ES6 */
-                if (nd.id)
-                    flow_graph.addEdge(funcVertex(nd), vertexFor(nd.id));
-                break;
-
-            // R6
-            case 'FunctionExpression':
-            case 'ArrowFunctionExpression':
-                flow_graph.addEdge(funcVertex(nd), exprVertex(nd));
-                if (nd.id)
-                    flow_graph.addEdge(funcVertex(nd), varVertex(nd.id));
-                break;
-
-            // R2, R4
-            case 'LogicalExpression':
-                if (nd.operator === '||')
-                    flow_graph.addEdge(vertexFor(nd.left), vertexFor(nd));
-                flow_graph.addEdge(vertexFor(nd.right), vertexFor(nd));
-                break;
-
-            // R5
-            case 'ObjectExpression':
-                nd.properties.forEach(function (prop) {
-                    if (prop.kind === 'init') {
-                        // Temporary fix for computed property names
-                        if (prop.key.type === 'Identifier' || prop.key.type == 'Literal')
-                            flow_graph.addEdge(vertexFor(prop.value), propVertex(prop.key));
+                // R1
+                case 'AssignmentExpression':
+                    if (nd.operator === '=') {
+                        flow_graph.addEdges(vertexFor(nd.right), [vertexFor(nd.left), vertexFor(nd)]);
                     }
-                });
-                break;
+                    break;
 
-            // R10
-            case 'ReturnStatement':
-                if (nd.argument)
-                    flow_graph.addEdge(vertexFor(nd.argument), retVertex(nd.attr.enclosingFunction));
-                break;
+                // R9
+                case 'CallExpression':
+                    if (nd.callee.type === 'MemberExpression') {
+                        flow_graph.addEdge(vertexFor(nd.callee.object), argVertex(nd, 0));
+                    }
+                // R8 FALL THROUGH
+                case 'NewExpression':
+                    flow_graph.addEdge(vertexFor(nd.callee), calleeVertex(nd));
+                    for (let i = 0; i < nd.arguments.length; ++i) {
+                        flow_graph.addEdge(vertexFor(nd.arguments[i]), argVertex(nd, i + 1));
+                    }
+                    flow_graph.addEdge(resVertex(nd), vertexFor(nd));
+                    break;
 
-            case 'SequenceExpression':
-                flow_graph.addEdge(vertexFor(nd.expressions[nd.expressions.length - 1]), vertexFor(nd));
-                break;
+                case 'CatchClause':
+                    flow_graph.addEdge(unknownVertex(), varVertex(nd.param));
+                    break;
 
-            case 'ThrowStatement':
-                flow_graph.addEdge(vertexFor(nd.argument), unknownVertex());
-                break;
+                // R3
+                case 'ConditionalExpression':
+                    flow_graph.addEdge(vertexFor(nd.consequent), vertexFor(nd));
+                    flow_graph.addEdge(vertexFor(nd.alternate), vertexFor(nd));
+                    break;
 
-            case 'VariableDeclarator':
-                // Only handle the case that nd.id is an Identifer
-                // ObjectPattern and ArrayPattern are handled separately
-                if (nd.id.type === 'Identifier' && nd.init)
-                    flow_graph.addEdge(vertexFor(nd.init), vertexFor(nd.id));
-                break;
+                // R7
+                case 'ClassDeclaration':
+                case 'ClassExpression':
+                    const body = nd.body.body;
+                    if (nd.id) {
+                        for (let i = 0; i < body.length; ++i) {
+                            if (body[i].kind === 'constructor') {
+                                flow_graph.addEdge(funcVertex(body[i].value), vertexFor(nd.id));
+                            }
+                        }
+                    }
+                    break;
 
-            // ES6 rule, similar to object expression
-            // Currently don't support rest and default params
-            case 'ObjectPattern':
-                for (let prop of nd.properties)
-                    // Assuming prop.key and prop.value are Identifers
-                    flow_graph.addEdge(propVertex(prop.key), vertexFor(prop.value));
-                break;
+                case 'FunctionDeclaration':
+                    /* This check is needed for:
+                            export function () { ... }
+                       as it will not have an id but will be
+                       a FunctionDeclaration in ES6 */
+                    if (nd.id) {
+                        flow_graph.addEdge(funcVertex(nd), vertexFor(nd.id));
+                    }
+                    break;
 
-            // ES6 rule, similar to array expression
-            // Currently don't support rest and default params
-            case 'ArrayPattern':
-                for (let i = 0; i < nd.elements.length; i++) {
-                    // Array destructuring can ignore some values, so check null first
-                    if (nd.elements[i])
-                        flow_graph.addEdge(
-                            propVertex({type: 'Literal', value: i}),
-                            vertexFor(nd.elements[i])
-                        );
-                }
-                break;
+                // R6
+                case 'FunctionExpression':
+                case 'ArrowFunctionExpression':
+                    flow_graph.addEdge(funcVertex(nd), exprVertex(nd));
+                    if (nd.id)
+                        flow_graph.addEdge(funcVertex(nd), varVertex(nd.id));
+                    break;
 
-            case 'MethodDefinition':
-                if (nd.key.type === 'Identifier')
-                    flow_graph.addEdge(funcVertex(nd.value), propVertex(nd.key))
-                break;
+                // R2, R4
+                case 'LogicalExpression':
+                    if (nd.operator === '||') {
+                        flow_graph.addEdge(vertexFor(nd.left), vertexFor(nd));
+                    }
+                    flow_graph.addEdge(vertexFor(nd.right), vertexFor(nd));
+                    break;
 
-            case 'WithStatement':
-            // throw new Error("'with' statement not supported");
+                // R5
+                case 'ObjectExpression':
+                    nd.properties.forEach(function (prop) {
+                        if (prop.kind === 'init') {
+                            // Temporary fix for computed property names
+                            if (prop.key.type === 'Identifier' || prop.key.type === 'Literal') {
+                                flow_graph.addEdge(vertexFor(prop.value), propVertex(prop.key));
+                            }
+                        }
+                    });
+                    break;
+
+                // R10
+                case 'ReturnStatement':
+                    if (nd.argument) {
+                        flow_graph.addEdge(vertexFor(nd.argument), retVertex(nd.attr.enclosingFunction));
+                    }
+                    break;
+
+                case 'SequenceExpression':
+                    flow_graph.addEdge(vertexFor(nd.expressions[nd.expressions.length - 1]), vertexFor(nd));
+                    break;
+
+                case 'ThrowStatement':
+                    flow_graph.addEdge(vertexFor(nd.argument), unknownVertex());
+                    break;
+
+                case 'VariableDeclarator':
+                    // Only handle the case that nd.id is an Identifier
+                    // ObjectPattern and ArrayPattern are handled separately
+                    if (nd.id.type === 'Identifier' && nd.init) {
+                        flow_graph.addEdge(vertexFor(nd.init), vertexFor(nd.id));
+                    }
+                    break;
+
+                // ES6 rule, similar to object expression
+                // Currently don't support rest and default params
+                case 'ObjectPattern':
+                    for (let prop of nd.properties) {
+                        // Assuming prop.key and prop.value are Identifiers
+                        flow_graph.addEdge(propVertex(prop.key), vertexFor(prop.value));
+                    }
+                    break;
+
+                // ES6 rule, similar to array expression
+                // Currently don't support rest and default params
+                case 'ArrayPattern':
+                    for (let i = 0; i < nd.elements.length; i++) {
+                        // Array destructuring can ignore some values, so check null first
+                        if (nd.elements[i]) {
+                            flow_graph.addEdge(
+                                propVertex({type: 'Literal', value: i}),
+                                vertexFor(nd.elements[i])
+                            );
+                        }
+                    }
+                    break;
+
+                case 'MethodDefinition':
+                    if (nd.key.type === 'Identifier') {
+                        flow_graph.addEdge(funcVertex(nd.value), propVertex(nd.key));
+                    }
+                    break;
+
+                case 'WithStatement':
+                // throw new Error("'with' statement not supported");
+            }
         }
-    });
+    );
+
     return flow_graph;
 }
 
 /* Return the flow graph vertex corresponding to a given AST node. */
 function vertexFor(nd) {
-    var decl, body;
+    let decl;
+    let body;
     switch (nd.type) {
         case 'Identifier':
             // global variables use a global vertex, local variables a var vertex
-            if (!nd.attr.scope)
+            if (!nd.attr.scope) {
                 debugger;
+            }
             decl = nd.attr.scope.get(nd.name);
             return decl && !decl.attr.scope.global ? varVertex(decl) : globVertex(nd);
         case 'ThisExpression':
@@ -173,26 +191,30 @@ function vertexFor(nd) {
             decl = nd.attr.scope.get('this');
             return decl ? varVertex(decl) : exprVertex(nd);
         case 'ClassExpression':
-            if (nd.id)
+            if (nd.id) {
                 return vertexFor(nd.id);
-
+            }
             body = nd.body.body;
-            for (let i = 0; i < body.length; ++i)
-                if (body[i].kind === 'constructor')
+            for (let i = 0; i < body.length; ++i) {
+                if (body[i].kind === 'constructor') {
                     return funcVertex(body[i].value);
+                }
+            }
             break;
         case 'MemberExpression':
             // ignore dynamic property accesses
-            if (!nd.computed)
+            if (!nd.computed) {
                 return propVertex(nd.property);
+            }
     }
     return exprVertex(nd);
 }
 
 // variable vertices are cached at the variable declarations
 function varVertex(nd) {
-    if (nd.type !== 'Identifier')
+    if (nd.type !== 'Identifier') {
         throw new Error("invalid variable vertex");
+    }
 
     return nd.attr.var_vertex
         || (nd.attr.var_vertex = {
@@ -207,18 +229,19 @@ function varVertex(nd) {
 }
 
 // global cache of property vertices
-var propVertices = new symtab.Symtab();
+const propVertices = new symtab.Symtab();
 
 // retrieve property vertex from cache, or create new one
 function propVertex(nd) {
-    var p;
-    if (nd.type === 'Identifier')
+    let p;
+    if (nd.type === 'Identifier') {
         p = nd.name;
-    else if (nd.type === 'Literal')
+    } else if (nd.type === 'Literal') {
         // this case handles array, property field: 0, 1, 2...
         p = nd.value + "";
-    else
+    } else {
         throw new Error("invalid property vertex");
+    }
 
     return propVertices.get(p, {
         type: 'PropertyVertex',
@@ -238,14 +261,14 @@ let globVertices = new symtab.Symtab();
 // similar to propVertex, globVertex doesn't have an associated ast node
 function globVertex(nd) {
     let gp;
-    if (nd.type === 'Identifier')
+    if (nd.type === 'Identifier') {
         gp = nd.name;
-    else if (nd.type === 'Literal')
+    } else if (nd.type === 'Literal') {
         // this case handles array, property field: 0, 1, 2...
         gp = nd.value + "";
-    else
+    } else {
         throw new Error("invalid global vertex");
-
+    }
     return globVertices.get(gp, {
         type: 'GlobalVertex',
         name: gp,
@@ -258,7 +281,7 @@ function globVertex(nd) {
 }
 
 // vertices representing well-known native functions
-var nativeVertices = new symtab.Symtab();
+const nativeVertices = new symtab.Symtab();
 
 function nativeVertex(name) {
     return nativeVertices.get(name, {
@@ -277,7 +300,7 @@ function getNativeVertices() {
 }
 
 // special ``unknown'' vertex representing flow that is not explicitly modelled
-var theUnknownVertex = {
+const theUnknownVertex = {
     type: 'UnknownVertex',
     attr: {
         pp: function () {
@@ -292,8 +315,10 @@ function unknownVertex() {
 
 // function vertex
 function funcVertex(fn) {
-    if (!astutil.isFunction(fn))
+    if (!astutil.isFunction(fn)) {
         throw new Error("invalid function vertex");
+    }
+
     return fn.attr.func_vertex
         || (fn.attr.func_vertex = {
             type: 'FuncVertex',
@@ -308,9 +333,10 @@ function funcVertex(fn) {
 
 // parameter vertex
 function parmVertex(fn, i) {
-    if (!astutil.isFunction(fn))
+    if (!astutil.isFunction(fn)) {
         throw new Error("invalid function vertex");
-    var vertex;
+    }
+    let vertex;
     if (i === 0) {
         vertex = varVertex(fn.attr.scope.get('this'));
     } else {
@@ -323,8 +349,9 @@ function parmVertex(fn, i) {
 
 // vertex representing function return value
 function retVertex(fn) {
-    if (!astutil.isFunction(fn))
+    if (!astutil.isFunction(fn)) {
         throw new Error("invalid return vertex");
+    }
 
     return fn.attr.ret_vertex
         || (fn.attr.ret_vertex = {
@@ -340,8 +367,9 @@ function retVertex(fn) {
 
 // vertex representing callee at a call site
 function calleeVertex(nd) {
-    if (nd.type !== 'CallExpression' && nd.type !== 'NewExpression')
+    if (nd.type !== 'CallExpression' && nd.type !== 'NewExpression') {
         throw new Error("invalid callee vertex");
+    }
 
     return nd.attr.callee_vertex
         || (nd.attr.callee_vertex = {
@@ -357,8 +385,10 @@ function calleeVertex(nd) {
 
 // vertex representing the ith argument at a call site; 0th argument is receiver
 function argVertex(nd, i) {
-    if (nd.type !== 'CallExpression' && nd.type !== 'NewExpression')
+    if (nd.type !== 'CallExpression' && nd.type !== 'NewExpression') {
         throw new Error("invalid callee vertex");
+    }
+
     if (i === 0) {
         return nd.attr.receiver_vertex
             || (nd.attr.receiver_vertex = {
@@ -386,8 +416,10 @@ function argVertex(nd, i) {
 
 // vertex representing result of a call
 function resVertex(nd) {
-    if (nd.type !== 'CallExpression' && nd.type !== 'NewExpression')
+    if (nd.type !== 'CallExpression' && nd.type !== 'NewExpression') {
         throw new Error("invalid result vertex");
+    }
+
     return nd.attr.res_vertex
         || (nd.attr.res_vertex = {
             type: 'ResVertex',
@@ -402,8 +434,10 @@ function resVertex(nd) {
 
 // vertex representing some other expression
 function exprVertex(nd) {
-    if (!nd.type)
+    if (!nd.type) {
         throw new Error("invalid expression vertex");
+    }
+
     return nd.attr.expr_vertex
         || (nd.attr.expr_vertex = {
             type: 'ExprVertex',

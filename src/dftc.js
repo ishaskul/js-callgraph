@@ -17,11 +17,11 @@
 const {nd2str} = require('./graph');
 
 exports.reachability = function (graph, nodePred) {
-    let enum_nodes = new Array();
+    const enum_nodes = [];
 
-    let nodes = graph.getNodes();
+    const nodes = graph.getNodes();
 
-    let n = nodes.length;
+    const n = nodes.length;
 
     const str2rid = {};
 
@@ -30,12 +30,12 @@ exports.reachability = function (graph, nodePred) {
         str2rid[nd2str(nodes[i])] = i;
     }
 
-    let visited = new Array(n).fill(0),
-        visited2 = new Array(n).fill(0),
-        popped = new Array(n).fill(0),
-        globol = new Set(),
-        m = [],
-        t = [];
+    const visited = new Array(n).fill(0);
+    const visited2 = new Array(n).fill(0);
+    const popped = new Array(n).fill(0);
+    let globol = new Set();
+    const m = [];
+    const t = [];
 
     for (let i = 0; i < n; i++) {
         m.push(new Set());
@@ -46,29 +46,32 @@ exports.reachability = function (graph, nodePred) {
         visited[i] = 1;
 
         if (!nodePred || nodePred(enum_nodes[i])) {
-            let succ = graph.succ(enum_nodes[i])
+            const succ = graph.succ(enum_nodes[i]);
 
             for (let j = 0; j < succ.length; j++) {
                 let index = str2rid[nd2str(succ[j])];
-                if (nodePred && !nodePred(succ[j]))
+                if (nodePred && !nodePred(succ[j])) {
                     continue;
-                if (m[i].has(index) || t[i].has(index))
+                }
+                if (m[i].has(index) || t[i].has(index)) {
                     continue;
-
-                if (visited[index] == 0)
+                }
+                if (visited[index] === 0) {
                     visit1(index);
-
-                if (popped[index] == 1) {
+                }
+                if (popped[index] === 1) {
                     m[i] = new Set(m[i])
                     for (let elem of m[index].values()) {
                         m[i].add(elem);
                     }
                     m[i].add(index);
                     t[i] = new Set(t[i])
-                    for (let elem of t[index].values())
+                    for (let elem of t[index].values()) {
                         t[i].add(elem);
-                    for (let elem of m[i].values())
+                    }
+                    for (let elem of m[i].values()) {
                         t[i].delete(elem);
+                    }
                 } else {
                     t[i] = new Set(t[i].add(index));
                 }
@@ -94,14 +97,16 @@ exports.reachability = function (graph, nodePred) {
         visited2[i] = 1;
 
         if (!nodePred || nodePred(enum_nodes[i])) {
-            let succ = graph.succ(enum_nodes[i])
+            const succ = graph.succ(enum_nodes[i]);
 
             for (let j = 0; j < succ.length; j++) {
-                let index = str2rid[nd2str(succ[j])];
-                if (nodePred && !nodePred(succ[j]))
+                const index = str2rid[nd2str(succ[j])];
+                if (nodePred && !nodePred(succ[j])) {
                     return;
-                if (visited2[index] == 0 && t[index].size !== 0)
+                }
+                if (visited2[index] === 0 && t[index].size !== 0) {
                     visit2(index);
+                }
             }
         }
 
@@ -123,14 +128,16 @@ exports.reachability = function (graph, nodePred) {
             }
             const src_id = str2rid[nodeStr];
 
-            if (visited[src_id] == 0)
+            if (visited[src_id] === 0) {
                 visit1(src_id);
+            }
 
-            var tc = new Set(m[src_id]);
-            for (let elem of t[src_id].values())
+            const tc = new Set(m[src_id]);
+            for (let elem of t[src_id].values()) {
                 tc.add(elem);
+            }
 
-            let ret = new Array();
+            const ret = [];
             for (let elem of tc.values()) {
                 ret.push(enum_nodes[elem]);
             }
@@ -150,26 +157,30 @@ exports.reachability = function (graph, nodePred) {
             }
             const src_id = str2rid[nodeStr];
 
-            if (visited[src_id] == 0)
+            if (visited[src_id] === 0) {
                 visit1(src_id);
+            }
 
-            var tc = new Set(m[src_id]);
-            for (let elem of t[src_id].values())
+            const tc = new Set(m[src_id]);
+            for (let elem of t[src_id].values()) {
                 tc.add(elem);
-
-            for (let elem of tc.values())
+            }
+            for (let elem of tc.values()) {
                 cb(enum_nodes[elem]);
+            }
         },
         reaches: function (src, dest) {
             const src_id = str2rid[nd2str(src)];
             const dest_id = str2rid[nd2str(dest)];
 
-            if (visited[src_id] == 0)
+            if (visited[src_id] === 0) {
                 visit1(src_id);
+            }
 
-            var tc = new Set(m[src_id]);
-            for (let elem of t[src_id].values())
+            const tc = new Set(m[src_id]);
+            for (let elem of t[src_id].values()) {
                 tc.add(elem);
+            }
 
             return tc.has(dest_id);
         }

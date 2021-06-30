@@ -13,34 +13,34 @@
  */
 
 function size(s) {
-    if (typeof s === 'undefined')
+    if (typeof s === 'undefined') {
         return 0;
-
-    if (typeof s === 'number')
+    }
+    if (typeof s === 'number') {
         return 1;
-
+    }
     return s.size;
 }
 
 /* Check whether set s contains number n */
 function contains(s, n) {
-    if (typeof s === 'undefined')
+    if (typeof s === 'undefined') {
         return false;
-
-    if (typeof s === 'number')
+    }
+    if (typeof s === 'number') {
         return s === n;
-
+    }
     return s.has(n);
 }
 
 /* Add number n to set s, and return the possibly modified s */
 function add(s, n) {
-    if (typeof s === 'undefined')
+    if (typeof s === 'undefined') {
         return n;
-
-    if (typeof s === 'number')
+    }
+    if (typeof s === 'number') {
         return new Set([s, n]);
-
+    }
     s.add(n);
     return s;
 }
@@ -50,25 +50,25 @@ function add(s, n) {
  * While set s1 may be modified, set s2 never is.
  */
 function addAll(s1, s2) {
-    if (typeof s1 === 'undefined')
+    if (typeof s1 === 'undefined') {
         return copy(s2);
+    }
 
-    if (typeof s2 === 'undefined')
+    if (typeof s2 === 'undefined') {
         return s1;
+    }
 
     if (typeof s1 === 'number' && typeof s2 === 'number') {
         return new Set([s1, s2]);
-    }
-    else if (typeof s1 === 'number' && typeof s2 === 'object') {
+    } else if (typeof s1 === 'number' && typeof s2 === 'object') {
         return new Set([s1, ...s2]);
-    }
-    else if (typeof s1 === 'object' && typeof s2 === 'number') {
+    } else if (typeof s1 === 'object' && typeof s2 === 'number') {
         s1.add(s2);
         return s1;
-    }
-    else {
-        for (let n of s2)
+    } else {
+        for (let n of s2) {
             s1.add(n);
+        }
         return s1
     }
 }
@@ -78,11 +78,13 @@ function addAll(s1, s2) {
  * Pitfall: this remove is inplace for array, not inplace for number
  */
 function remove(s, n) {
-    if (typeof s === 'undefined')
+    if (typeof s === 'undefined') {
         return s;
+    }
 
-    if (typeof s === 'number')
-        return s === n ? void(0) : s;
+    if (typeof s === 'number') {
+        return s === n ? void (0) : s;
+    }
 
     s.delete(n)
     return s;
@@ -92,29 +94,34 @@ function remove(s, n) {
  * Remove all elements in set s2 from set s1, return the resulting set
  */
 function removeAll(s1, s2) {
-    if (typeof s1 === 'undefined' || typeof s2 === 'undefined')
+    if (typeof s1 === 'undefined' || typeof s2 === 'undefined') {
         return s1;
+    }
 
-    if (typeof s1 === 'number')
-        return contains(s2, s1) ? void(0) : s1;
+    if (typeof s1 === 'number') {
+        return contains(s2, s1) ? void (0) : s1;
+    }
 
     if (typeof s2 === 'number') {
         s1.delete(s2);
         return s1;
     }
 
-    for (let n of s2)
+    for (let n of s2) {
         s1.delete(n);
+    }
 
-    if (s1.size === 0)
-        return void(0);
-    else
-        return s1;
+    if (s1.size === 0) {
+        return void (0);
+    }
+
+    return s1;
 }
 
 function copy(s) {
-    if (typeof s === 'undefined' || typeof s === 'number')
+    if (typeof s === 'undefined' || typeof s === 'number') {
         return s;
+    }
 
     // Return a shallow clone of the original set s
     return new Set(s);
@@ -122,24 +129,23 @@ function copy(s) {
 
 function iter(s, cb) {
     if (typeof s !== 'undefined') {
-        if (typeof s === 'number')
+        if (typeof s === 'number') {
             cb(s);
-        else
+        } else {
             s.forEach(cb);
+        }
     }
 }
 
 function map(s, f) {
     if (typeof s !== 'undefined') {
-        if (typeof s === 'number')
+        if (typeof s === 'number') {
             return [f(s)];
-        else {
+        } else {
             return Array.from(s).map(f);
         }
     }
-    else {
-        return [];
-    }
+    return [];
 }
 
 function fromArray(ary) {
@@ -147,12 +153,13 @@ function fromArray(ary) {
 }
 
 function toArray(s) {
-    if (typeof s === 'undefined')
-        return []
+    if (typeof s === 'undefined') {
+        return [];
+    }
 
-    if (typeof s === 'number')
-        return [s]
-
+    if (typeof s === 'number') {
+        return [s];
+    }
     return Array.from(s);
 }
 

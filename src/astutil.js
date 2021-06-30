@@ -22,12 +22,12 @@ function visit(root, visitor) {
             return;
 
         if (nd.type) {
-            var res = visitor(nd, doVisit, parent, childProp);
+            const res = visitor(nd, doVisit, parent, childProp);
             if (res === false)
                 return;
         }
 
-        for (var p in nd) {
+        for (const p in nd) {
             // skip over magic properties
             if (!nd.hasOwnProperty(p) || p.match(/^(range|loc|attr|comments|raw)$/))
                 continue;
@@ -50,12 +50,12 @@ function visitWithState(root, visitor) {
             return;
 
         if (nd.type) {
-            var res = visitor(nd, doVisit, state, parent, childProp);
+            const res = visitor(nd, doVisit, state, parent, childProp);
             if (res === false)
                 return;
         }
 
-        for (var p in nd) {
+        for (const p in nd) {
             // skip over magic properties
             if (!nd.hasOwnProperty(p) || p.match(/^(range|loc|attr|comments|raw)$/))
                 continue;
@@ -70,7 +70,8 @@ function visitWithState(root, visitor) {
  * nodes, and fill in `enclosingFunction` and `enclosingFile`
  * attributes. */
 function init(root) {
-    var enclosingFunction = null, enclosingFile = null;
+    let enclosingFunction = null;
+    let enclosingFile = null;
     // global collections containing all functions and all call sites
     root.attr.functions = [];
     root.attr.calls = [];
@@ -78,11 +79,12 @@ function init(root) {
         if (nd.type && !nd.attr)
             nd.attr = {};
 
-        if (enclosingFunction)
+        if (enclosingFunction) {
             nd.attr.enclosingFunction = enclosingFunction;
-        if (enclosingFile)
+        }
+        if (enclosingFile) {
             nd.attr.enclosingFile = enclosingFile;
-
+        }
         if (nd.type === 'Program') {
             enclosingFile = nd.attr.filename;
         }
@@ -113,10 +115,9 @@ function init(root) {
         */
         if (nd.type === 'FunctionExpression' && parent.type === 'Property') {
             if (!parent.computed) {
-                if (parent.key.type === 'Identifier'){
+                if (parent.key.type === 'Identifier') {
                     nd.id = parent.key;
-                }
-                else if (parent.key.type === 'Literal') {
+                } else if (parent.key.type === 'Literal') {
                     // create a new `Identifier` AST node and set it to `FunctionExpression`'s id
                     nd.id = {
                         type: 'Identifier',
@@ -124,23 +125,21 @@ function init(root) {
                         range: parent.key.range,
                         loc: parent.key.loc
                     };
-                }
-                else {
+                } else {
                     console.log("WARNING: unexpected key type of 'Property'.");
                 }
-            }
-            else
+            } else
                 console.log("WARNING: Computed property for method definition, not yet supported.");
         }
 
         if (nd.type === 'FunctionDeclaration' ||
-            nd.type === 'FunctionExpression'  ||
+            nd.type === 'FunctionExpression' ||
             nd.type === 'ArrowFunctionExpression') {
 
             root.attr.functions.push(nd);
             nd.attr.parent = parent;
             nd.attr.childProp = childProp;
-            var old_enclosingFunction = enclosingFunction;
+            const old_enclosingFunction = enclosingFunction;
             enclosingFunction = nd;
             doVisit(nd.id);
             doVisit(nd.params);
@@ -175,16 +174,13 @@ function init(root) {
             if (!nd.computed) {
                 if (nd.key.type === 'Identifier') {
                     nd.value.id = nd.key;
-                }
-                else if (nd.key.type === 'Literal') {
+                } else if (nd.key.type === 'Literal') {
                     // this case is covered by test case: tests/unexpected/stringiterator.truth
                     console.log("WARNING: invalid syntax, method name is of type Literal instead of Identifier.");
-                }
-                else {
+                } else {
                     console.log("WARNING: unexpected key type of 'MethodDefinition'.");
                 }
-            }
-            else {
+            } else {
                 console.log("WARNING: Computed property for method definition, not yet supported.");
             }
 
@@ -195,11 +191,13 @@ function init(root) {
 
 /* Simple version of UNIX basename. */
 function basename(filename) {
-    if (!filename)
+    if (!filename) {
         return "<???>";
-    var idx = filename.lastIndexOf('/');
-    if (idx === -1)
+    }
+    let idx = filename.lastIndexOf('/');
+    if (idx === -1) {
         idx = filename.lastIndexOf('\\');
+    }
     return filename.substring(idx + 1);
 }
 
@@ -209,22 +207,22 @@ function isAnon(funcName) {
 
 // func must be function node in ast
 function funcname(func) {
-    if (func === undefined)
+    if (func === undefined) {
         console.log('WARNING: func undefined in astutil/funcname.');
-    else if (func.id === null)
+    } else if (func.id === null) {
         return "anon";
-    else
-        return func.id.name;
+    }
+    return func.id.name;
 }
 
 // encFunc can be undefined
 function encFuncName(encFunc) {
     if (encFunc === undefined) {
         return "global";
-    } else if (encFunc.id === null)
+    } else if (encFunc.id === null) {
         return "anon";
-    else
-        return encFunc.id.name
+    }
+    return encFunc.id.name
 }
 
 /* Pretty-print position. */
@@ -241,7 +239,7 @@ function astFromFiles(files) {
     }
 
     for (let file of files) {
-        let src = fs.readFileSync(file, 'utf-8');
+        const src = fs.readFileSync(file, 'utf-8');
         ast.programs.push(buildProgram(file, src));
     }
     init(ast);
@@ -259,8 +257,9 @@ Return:
 */
 function astFromSrc(fname, src) {
     const prog = buildProgram(fname, src);
-    if (prog === null)
+    if (prog === null) {
         return null;
+    }
     const ast = {
         'type': 'ProgramCollection',
         'programs': [prog],
@@ -298,7 +297,7 @@ Return:
     If succeeded, return an ast node of type 'Program'.
     If failed, return null.
 */
-function buildProgram (fname, src) {
+function buildProgram(fname, src) {
     let prog;
 
     // trim hashbang
@@ -309,8 +308,7 @@ function buildProgram (fname, src) {
             // src = vueParser.parse(src, 'module');
             console.log("Not yet supported");
         }
-    }
-    catch (err) {
+    } catch (err) {
         reportError('WARNING: Extracting <script> from .vue failed.', err);
         return null;
     }
@@ -329,13 +327,13 @@ function buildProgram (fname, src) {
 }
 
 // cf is used by getFunctions
-const cf = funcObj => {
+function cf(funcObj) {
     return funcObj.file + ':' +
-           funcObj.name + ':' +
-           funcObj.range[0] + ':' +
-           funcObj.range[1] + ':' +
-           (funcObj.charRange[1] - funcObj.charRange[0]);
-};
+        funcObj.name + ':' +
+        funcObj.range[0] + ':' +
+        funcObj.range[1] + ':' +
+        (funcObj.charRange[1] - funcObj.charRange[0]);
+}
 
 /* Return a list of objects storing function info in root
 
@@ -362,13 +360,9 @@ function getFunctions(root, src) {
 
     for (let i = 0; i < funcNodes.length; ++i) {
         const fn = funcNodes[i];
-
-        // funcName
-        let funcName = funcname(fn);
-
-        // startLine && endLine
-        let startLine = fn.loc.start['line'];
-        let endLine = fn.loc.end['line'];
+        const funcName = funcname(fn);
+        const startLine = fn.loc.start['line'];
+        const endLine = fn.loc.end['line'];
 
         // name, file and range are for colon format id
         // code and encFuncName are added for trackFunctions
@@ -389,7 +383,7 @@ function getFunctions(root, src) {
 
     // Create a fake function object for global context
     console.assert(root.programs.length === 1);
-    let prog = root.programs[0];
+    const prog = root.programs[0];
     funcs.push({
         'name': 'global',
         'file': prog.attr.filename,
@@ -421,19 +415,22 @@ Relevant docs:
     }
 */
 function isModuleExports(nd) {
-    if (nd.type !== 'AssignmentExpression')
+    if (nd.type !== 'AssignmentExpression') {
         return false;
+    }
 
-    let left = nd.left;
+    const left = nd.left;
 
-    if (left.type !== 'MemberExpression')
-        return  false;
-
-    let object = left.object;
-    let property = left.property;
-
-    if (object.type !== 'Identifier' || property.type !== 'Identifier')
+    if (left.type !== 'MemberExpression') {
         return false;
+    }
+
+    const object = left.object;
+    const property = left.property;
+
+    if (object.type !== 'Identifier' || property.type !== 'Identifier') {
+        return false;
+    }
 
     return object.name === 'module' && property.name === 'exports';
 }
@@ -454,15 +451,17 @@ Relevant docs:
     }
 */
 function isCallTo(nd, fn_name) {
-    if (nd.type !== 'CallExpression')
+    if (nd.type !== 'CallExpression') {
         return false;
+    }
 
-    let callee = nd.callee;
+    const callee = nd.callee;
 
-    if (callee.type !== 'Identifier')
+    if (callee.type !== 'Identifier') {
         return false;
+    }
 
-    return callee.name === fn_name
+    return callee.name === fn_name;
 }
 
 /*
@@ -495,8 +494,8 @@ Relevant docs:
     }
 */
 function getReturnValues(fn) {
-    let lst = [];
-    let fn_body = fn.body;
+    const lst = [];
+    const fnBody = fn.body;
     /* There're two cases here:
     Case 1. fn_body is of type 'BlockStatement'
         this is the most common case, for example
@@ -540,14 +539,15 @@ function getReturnValues(fn) {
             "sourceType": "script"
         }
     */
-    if (fn_body.type === 'BlockStatement') {
-        let block = fn_body.body;
-        for (var i = 0; i < block.length; i++)
-                if (block[i].type === 'ReturnStatement')
-                    lst.push(block[i].argument);
-    }
-    else {
-        lst.push(fn_body);
+    if (fnBody.type === 'BlockStatement') {
+        const block = fnBody.body;
+        for (let i = 0; i < block.length; i++) {
+            if (block[i].type === 'ReturnStatement') {
+                lst.push(block[i].argument);
+            }
+        }
+    } else {
+        lst.push(fnBody);
     }
     return lst;
 }
@@ -562,9 +562,9 @@ Returns:
     false otherwise.
 */
 function isFunction(nd) {
-   return nd.type === 'FunctionDeclaration' ||
-          nd.type === 'FunctionExpression' ||
-          nd.type === 'ArrowFunctionExpression'
+    return nd.type === 'FunctionDeclaration' ||
+        nd.type === 'FunctionExpression' ||
+        nd.type === 'ArrowFunctionExpression'
 }
 
 module.exports.visit = visit;
@@ -581,5 +581,5 @@ module.exports.isAnon = isAnon;
 module.exports.isModuleExports = isModuleExports;
 module.exports.isCallTo = isCallTo;
 module.exports.getReturnValues = getReturnValues;
-module.exports.isFunction= isFunction;
-module.exports.cf= cf;
+module.exports.isFunction = isFunction;
+module.exports.cf = cf;

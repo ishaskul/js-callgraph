@@ -5,19 +5,21 @@ const fs = require('fs');
 
 
 function makeRequireJsGraph(ast) {
-    assert.equal(1, ast.programs.length, "Can only have one starting point at the moment.");
+    assert.strictEqual(ast.programs.length, 1, "Can only have one starting point at the moment.");
 
-    var rx = /^.*\\(.+\\)*(.+)\.(.+)$/g;
-    var regexParse = rx.exec(ast.programs[0].attr.filename);
-    var partialFileName = regexParse[2] + ".js",
-        fileName = "./" + partialFileName,
-        folder = regexParse[0].split(/[a-zA-Z]+\.js/)[0].replace(/\/$/, "\\");
-    var dependencyGraph = [];
+    const rx = /^.*\\(.+\\)*(.+)\.(.+)$/g;
+    const regexParse = rx.exec(ast.programs[0].attr.filename);
+    const partialFileName = regexParse[2] + ".js";
+    const fileName = "./" + partialFileName;
+    const folder = regexParse[0].split(/[a-zA-Z]+\.js/)[0].replace(/\/$/, "\\");
+    let dependencyGraph = [];
+
     astutil.visit(ast, function (node) {
         switch (node.type) {
             case 'CallExpression' :
                 if (node.callee.name === "define" || node.callee.name === "require") {
-                    var dependencies = [], argument = node.arguments[0];
+                    const dependencies = [];
+                    const argument = node.arguments[0];
                     if (argument.type === "ArrayExpression") {
                         argument.elements.forEach(function (element) {
                             dependencies.push(element.value + ".js");
@@ -35,12 +37,12 @@ function makeRequireJsGraph(ast) {
     dependencyGraph.map(function (dep) {
         return dep.to
     }).forEach(function (outgoingDep) {
-        var normOutgoingDep = outgoingDep.replace(/^.\//, "");
+        let normOutgoingDep = outgoingDep.replace(/^.\//, "");
         normOutgoingDep = normOutgoingDep.replace(/^\//, "");
         normOutgoingDep = normOutgoingDep.replace(/\//, "\\");
-        var newStart = folder + normOutgoingDep;
+        const newStart = folder + normOutgoingDep;
         if (fs.existsSync(newStart)) {
-            var referencedAST = astutil.astFromFiles([newStart]);
+            const referencedAST = astutil.astFromFiles([newStart]);
             dependencyGraph = dependencyGraph.concat(makeRequireJsGraph(referencedAST))
         }
     });

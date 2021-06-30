@@ -23,7 +23,10 @@ this.files = null;
 this.consoleOutput = null;
 
 Array.prototype.remove = function () {
-    var what, a = arguments, L = a.length, ax;
+    let what;
+    let a = arguments;
+    let L = a.length;
+    let ax;
     while (L && this.length) {
         what = a[--L];
         while ((ax = this.indexOf(what)) !== -1) {
@@ -35,7 +38,7 @@ Array.prototype.remove = function () {
 
 let addNode = function (edge, v) {
     if (v.type === 'CalleeVertex') {
-        let nd = v.call;
+        const nd = v.call;
         edge.label = astutil.encFuncName(nd.attr.enclosingFunction);
         edge.file = nd.attr.enclosingFile;
         edge.start = {row: nd.loc.start.line, column: nd.loc.start.column};
@@ -66,7 +69,7 @@ let addNode = function (edge, v) {
 };
 
 let buildBinding = function (call, fn) {
-    let edge = {
+    const edge = {
         source: {
             label: null,
             file: null,
@@ -87,31 +90,34 @@ let buildBinding = function (call, fn) {
     return edge;
 };
 
-let pp = function (v) {
-    if (v.type === 'CalleeVertex')
+function pp(v) {
+    if (v.type === 'CalleeVertex') {
         return '\'' + astutil.encFuncName(v.call.attr.enclosingFunction) + '\' (' + astutil.ppPos(v.call) + ')';
-    if (v.type === 'FuncVertex')
+    }
+    if (v.type === 'FuncVertex') {
         return '\'' + astutil.funcname(v.func) + '\' (' + astutil.ppPos(v.func) + ')';
-    if (v.type === 'NativeVertex')
+    }
+    if (v.type === 'NativeVertex') {
         return '\'' + v.name + '\' (Native)';
+    }
     throw new Error("strange vertex: " + v);
-};
+}
 
 let build = function () {
-    let args = this.args;
-    let files = this.files;
-    let consoleOutput = this.consoleOutput;
+    const args = this.args;
+    const consoleOutput = this.consoleOutput;
+    const filter = this.filter;
 
-    let filter = this.filter;
+    let files = this.files;
 
     if (filter !== undefined && filter.length > 0) {
-        let filteredfiles = [];
+        const filteredfiles = [];
         files.forEach(function (file) {
             filteredfiles.push(file);
             filter.forEach(function (elem) {
-                let trunk = elem.substr(1).trim();
-                let expression = new RegExp(trunk, "gm");
-                let result = expression.test(file);
+                const trunk = elem.substr(1).trim();
+                const expression = new RegExp(trunk, "gm");
+                const result = expression.test(file);
 
                 if (result && elem.startsWith('-')) {
                     filteredfiles.remove(file);
@@ -127,7 +133,9 @@ let build = function () {
     }
 
     args.strategy = args.strategy || 'ONESHOT';
+
     if (!args.strategy.match(/^(NONE|ONESHOT|DEMAND|FULL)$/)) {
+        console.warn("Unknown strategy: " + args.strategy);
         process.exit(-1);
     }
     if (args.strategy === 'FULL') {
@@ -135,7 +143,7 @@ let build = function () {
         args.strategy = 'DEMAND';
     }
     if (args.time) console.time("parsing  ");
-    var ast = astutil.astFromFiles(files);
+    const ast = astutil.astFromFiles(files);
     if (args.time) console.timeEnd("parsing  ");
 
     if (args.time) console.time("bindings ");
@@ -143,15 +151,16 @@ let build = function () {
     if (args.time) console.timeEnd("bindings ");
 
     if (args.time) console.time("callgraph");
-    var cg;
-    if (args.strategy === 'NONE' || args.strategy === 'ONESHOT')
+    let cg;
+    if (args.strategy === 'NONE' || args.strategy === 'ONESHOT') {
         cg = pessimistic.buildCallGraph(ast, args.strategy === 'NONE');
-    else if (args.strategy === 'DEMAND')
+    } else if (args.strategy === 'DEMAND') {
         cg = semioptimistic.buildCallGraph(ast);
+    }
     if (args.time) console.timeEnd("callgraph");
 
     if (args.fg) {
-        let serializedGraph = cg.fg.graph.serialize();
+        const serializedGraph = cg.fg.graph.serialize();
         serializedGraph.links.forEach((link) => {
             console.log(link.source, "=>", link.target);
         });
@@ -165,11 +174,12 @@ let build = function () {
             console.log(edge.toString());
         });
     if (args.cg) {
-        let result = [];
+        const result = [];
         cg.edges.iter(function (call, fn) {
             result.push(buildBinding(call, fn));
-            if (consoleOutput)
+            if (consoleOutput) {
                 console.log(pp(call) + " -> " + pp(fn));
+            }
         });
         if (this.args.output !== undefined) {
             let filename = this.args.output[0];
@@ -177,12 +187,12 @@ let build = function () {
                 filename += ".json";
             }
 
-            var json_out = "";
+            let json_out = "";
 
             fs.writeFileSync(filename, "[", {flag: 'w+'}); /* Write initial JSON header and create file */
 
-            for (var indx = 0; indx < result.length - 1; indx++) {
-                var current = JSON.stringify(result[indx], null, 2) + ",";
+            for (let indx = 0; indx < result.length - 1; indx++) {
+                const current = JSON.stringify(result[indx], null, 2) + ",";
 
                 /* Most recent string length limit = 2^29 - 16
                     https://github.com/v8/v8/commit/ea56bf5513d0cbd2a35a9035c5c2996272b8b728 */

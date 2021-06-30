@@ -1,4 +1,3 @@
-
 class ListNode {
     constructor(ele) {
         this._ele = ele;
@@ -26,7 +25,7 @@ class LinkedList {
 
     // simply adds ele to the head of the list
     add(ele) {
-        let lnode = new ListNode(ele);
+        const lnode = new ListNode(ele);
         lnode.next = this._head;
         this._head = lnode;
         this._size++;
@@ -40,8 +39,7 @@ class LinkedList {
             if (current.element === ele) {
                 if (prev === null) {
                     this._head = current.next;
-                }
-                else {
+                } else {
                     prev.next = current.next;
                 }
                 this._size--;
@@ -56,8 +54,9 @@ class LinkedList {
     has(ele) {
         let current = this._head;
         while (current !== null) {
-            if (current.element === ele)
+            if (current.element === ele) {
                 return true;
+            }
             current = current.next;
         }
         return false;
@@ -74,19 +73,17 @@ class LinkedList {
     [Symbol.iterator]() {
         let value = null;
         let current = this._head;
-        const iterator = {
+        return {
             next: () => {
                 if (current !== null) {
                     value = current;
                     current = current.next;
                     return {value: value.element, done: false}
-                }
-                else {
+                } else {
                     return {value: undefined, done: true};
                 }
             }
-        }
-        return iterator;
+        };
     }
 }
 

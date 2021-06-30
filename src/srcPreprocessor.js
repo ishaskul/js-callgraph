@@ -18,8 +18,8 @@
 const babel = require('@babel/core');
 
 const nameToFunc = {
-	'flow': stripFlowPrep,
-	'hashbang': trimHashbangPrep
+    'flow': stripFlowPrep,
+    'hashbang': trimHashbangPrep
 };
 
 /* Apply a list of preprocessors to src
@@ -29,18 +29,18 @@ Args:
 	prepNames - A list of preprocessor names
 */
 function applyPreps(src, fname, prepNames) {
-	try {
-		for (let prepName of prepNames)
-			src = nameToFunc[prepName](src);
-	}
-	catch (err) {
+    try {
+        for (let prepName of prepNames) {
+            src = nameToFunc[prepName](src);
+        }
+    } catch (err) {
         console.log('-------------------------------------------');
         console.log('Warning: Preprocessing errored ' + fname);
         console.log(err.stack);
         console.log('-------------------------------------------');
         return null;
-	}
-	return src;
+    }
+    return src;
 }
 
 function stripFlowPrep(src) {
@@ -59,10 +59,10 @@ Reference:
 */
 function trimHashbangPrep(src) {
     if (src.substring(0, 2) === '#!') {
-        var end = src.indexOf('\n');
-        var filler = '';
-        for (var i = 0; i < end; ++i) {
-           filler += ' ';
+        const end = src.indexOf('\n');
+        let filler = '';
+        for (let i = 0; i < end; ++i) {
+            filler += ' ';
         }
         src = filler + src.substring(end, src.length);
     }

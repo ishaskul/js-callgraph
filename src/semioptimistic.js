@@ -22,29 +22,31 @@ const dftc = require('./dftc');
 function addInterproceduralFlowEdges(ast, fg) {
     fg = fg || new graph.FlowGraph();
 
-    var changed;
+    let changed;
     do {
         changed = false;
 
-        var reach = dftc.reachability(fg, function (nd) {
+        const reach = dftc.reachability(fg, function (nd) {
             return nd.type !== 'UnknownVertex';
         });
 
         ast.attr.calls.forEach(function (call) {
-            var res = flowgraph.resVertex(call);
-            if (!res.attr.interesting)
+            const res = flowgraph.resVertex(call);
+            if (!res.attr.interesting) {
                 reach.iterReachable(res, function (nd) {
                     if (nd.type === 'CalleeVertex') {
                         res.attr.interesting = true;
                     }
                 });
+            }
         });
 
         ast.attr.functions.forEach(function (fn) {
-            var interesting = false, nparams = fn.params.length;
+            let interesting = false;
+            const nparams = fn.params.length;
 
-            for (var i = 0; i <= nparams; ++i) {
-                var param = flowgraph.parmVertex(fn, i);
+            for (let i = 0; i <= nparams; ++i) {
+                const param = flowgraph.parmVertex(fn, i);
                 if (!param.attr.interesting) {
                     reach.iterReachable(param, function (nd) {
                         if (nd.type === 'CalleeVertex') {
@@ -57,30 +59,33 @@ function addInterproceduralFlowEdges(ast, fg) {
 
             reach.iterReachable(flowgraph.funcVertex(fn), function (nd) {
                 if (nd.type === 'CalleeVertex') {
-                    var call = nd.call, res = flowgraph.resVertex(call);
+                    const call = nd.call;
+                    const res = flowgraph.resVertex(call);
 
                     if (res.attr.interesting) {
-                        var ret = flowgraph.retVertex(fn);
+                        const ret = flowgraph.retVertex(fn);
                         if (!fg.hasEdge(ret, res)) {
                             changed = true;
                             fg.addEdge(ret, res);
                         }
                     }
 
-                    if (interesting)
-                        for (var i = 0; i <= nparams; ++i) {
-                            if (i > call.arguments.length)
+                    if (interesting) {
+                        for (let i = 0; i <= nparams; ++i) {
+                            if (i > call.arguments.length) {
                                 break;
+                            }
 
-                            var param = flowgraph.parmVertex(fn, i);
+                            const param = flowgraph.parmVertex(fn, i);
                             if (param.attr.interesting) {
-                                var arg = flowgraph.argVertex(call, i);
+                                const arg = flowgraph.argVertex(call, i);
                                 if (!fg.hasEdge(arg, param)) {
                                     changed = true;
                                     fg.addEdge(arg, param);
                                 }
                             }
                         }
+                    }
                 }
             });
         });
@@ -90,12 +95,12 @@ function addInterproceduralFlowEdges(ast, fg) {
 }
 
 function buildCallGraph(ast) {
-    var fg = new graph.FlowGraph();
+    const fg = new graph.FlowGraph();
     natives.addNativeFlowEdges(fg);
     flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
 
-    let expFuncs = {},
-        impFuncs = {};
+    const expFuncs = {};
+    const impFuncs = {};
     mod.collectExportsImports(ast, expFuncs, impFuncs);
     mod.connectImports(fg, expFuncs, impFuncs);
 

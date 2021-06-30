@@ -15,10 +15,11 @@ const flowgraph = require('./flowgraph');
 const nativeFlows = require('./harness').nativeFlows;
 
 function addNativeFlowEdges(flow_graph) {
-    for (var native in nativeFlows) {
-        if (!nativeFlows.hasOwnProperty(native))
+    for (const native in nativeFlows) {
+        if (!nativeFlows.hasOwnProperty(native)) {
             continue;
-        var target = nativeFlows[native];
+        }
+        const target = nativeFlows[native];
         flow_graph.addEdge(
             flowgraph.nativeVertex(native),
             flowgraph.propVertex({

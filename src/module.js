@@ -143,8 +143,9 @@ Args:
           nd - An ast node, usually of type FunctionDeclaration
 */
 function addDefaultExport(expFuncs, fname, nd) {
-    if (!(fname in expFuncs))
+    if (!(fname in expFuncs)) {
         addFileToExports(expFuncs, fname);
+    }
     expFuncs[fname]['default'].push(nd);
 }
 
@@ -188,8 +189,9 @@ Args:
     exportedName - A string, the name visible to outside
 */
 function addNamedExport(expFuncs, fname, local, exportedName) {
-    if (!(fname in expFuncs))
+    if (!(fname in expFuncs)) {
         addFileToExports(expFuncs, fname);
+    }
 
     /* Re-assignment warning
     Note that if (exportedName in expFuncs[fname]['named']) doesn't work here,
@@ -197,8 +199,9 @@ function addNamedExport(expFuncs, fname, local, exportedName) {
     for example, 'toString'.
     */
     exportedName = mangle(exportedName);
-    if (expFuncs[fname]['named'].hasOwnProperty(exportedName))
+    if (expFuncs[fname]['named'].hasOwnProperty(exportedName)) {
         console.log('WARNING: Re-assignment in addNamedExport.');
+    }
 
     expFuncs[fname]['named'][exportedName] = local;
 }
@@ -211,8 +214,10 @@ Args:
     redirectFnaem - A string, full path to the file being exported
 */
 function addRedirectExport(expFuncs, fname, redirectFname) {
-    if (!(fname in expFuncs))
+    if (!(fname in expFuncs)) {
         addFileToExports(expFuncs, fname);
+    }
+
     expFuncs[fname]['redirect'].push(redirectFname);
 }
 
@@ -231,11 +236,13 @@ Args:
       idNode - An ast node of type 'Identifer'
 */
 function addDefaultImport(impFuncs, fname, srcFname, idNode) {
-    if (!(fname in impFuncs))
+    if (!(fname in impFuncs)) {
         impFuncs[fname] = {};
+    }
 
-    if (!(srcFname in impFuncs[fname]))
+    if (!(srcFname in impFuncs[fname])) {
         addSrcToFile(impFuncs, fname, srcFname);
+    }
 
     impFuncs[fname][srcFname]['default'].push(idNode);
 }
@@ -256,11 +263,13 @@ Args:
     importedName - A string, the original name of imported value
 */
 function addNamedImport(impFuncs, fname, srcFname, local, importedName) {
-    if (!(fname in impFuncs))
+    if (!(fname in impFuncs)) {
         impFuncs[fname] = {};
+    }
 
-    if (!(srcFname in impFuncs[fname]))
+    if (!(srcFname in impFuncs[fname])) {
         addSrcToFile(impFuncs, fname, srcFname);
+    }
 
     let named = impFuncs[fname][srcFname]['named'];
 
@@ -270,10 +279,11 @@ function addNamedImport(impFuncs, fname, srcFname, local, importedName) {
     for example, 'toString'.
     */
     importedName = mangle(importedName);
-    if (named.hasOwnProperty(importedName))
+    if (named.hasOwnProperty(importedName)) {
         named[importedName].push(local);
-    else
+    } else {
         named[importedName] = [local];
+    }
 }
 
 /* Add a entire import to impFuncs
@@ -291,11 +301,13 @@ Args:
     srcFname - A string, absolute path of the file being imported
 */
 function addEntireImport(impFuncs, fname, srcFname) {
-    if (!(fname in impFuncs))
+    if (!(fname in impFuncs)) {
         impFuncs[fname] = {};
+    }
 
-    if (!(srcFname in impFuncs[fname]))
+    if (!(srcFname in impFuncs[fname])) {
         addSrcToFile(impFuncs, fname, srcFname);
+    }
 
     impFuncs[fname][srcFname]['entire'] = true;
 }
@@ -319,12 +331,12 @@ function connectDefaultImport(expFuncs, fg, srcFname, idNode) {
             fg.addEdge(flowgraph.funcVertex(expr), flowgraph.vertexFor(idNode));
         } else if (expr.type === 'ClassDeclaration' || expr.type === 'ClassExpression') {
             let body = expr.body.body
-            for (var i = 0; i < body.length; ++i)
-              if (body[i].kind === 'constructor') {
-                  fg.addEdge(flowgraph.funcVertex(body[i].value), flowgraph.vertexFor(idNode));
+            for (let i = 0; i < body.length; ++i)
+                if (body[i].kind === 'constructor') {
+                    fg.addEdge(flowgraph.funcVertex(body[i].value), flowgraph.vertexFor(idNode));
                 }
         } else {
-          fg.addEdge(flowgraph.vertexFor(expr), flowgraph.vertexFor(idNode));
+            fg.addEdge(flowgraph.vertexFor(expr), flowgraph.vertexFor(idNode));
         }
     }
 }
@@ -338,11 +350,13 @@ Args:
                  - can be used to search expFuncs[srcFame]['named']
 */
 function connectNamedImport(expFuncs, fg, srcFname, local, importedName) {
-    if (!(srcFname in expFuncs))
+    if (!(srcFname in expFuncs)) {
         return;
+    }
 
-    for (let redirectFname of expFuncs[srcFname]['redirect'])
+    for (let redirectFname of expFuncs[srcFname]['redirect']) {
         connectNamedImport(expFuncs, fg, redirectFname, local, importedName);
+    }
 
     let named = expFuncs[srcFname]['named'];
 
@@ -351,25 +365,28 @@ function connectNamedImport(expFuncs, fg, srcFname, local, importedName) {
     because importedName can be properties of named's prototype,
     for example, 'toString'.
     */
-    if (!named.hasOwnProperty(importedName))
+    if (!named.hasOwnProperty(importedName)) {
         return;
+    }
 
     fg.addEdge(flowgraph.vertexFor(named[importedName]), flowgraph.vertexFor(local));
 }
 
 function connectEntireImport(expFuncs, fg, srcFname) {
-    if (!(srcFname in expFuncs))
+    if (!(srcFname in expFuncs)) {
         return;
+    }
 
-    for (let redirectFname of expFuncs[srcFname]['redirect'])
+    for (let redirectFname of expFuncs[srcFname]['redirect']) {
         connectEntireImport(expFuncs, fg, redirectFname);
+    }
 
     let named = expFuncs[srcFname]['named'];
 
     for (let exportedName in named)
         fg.addEdge(
             flowgraph.vertexFor(named[exportedName]),
-            flowgraph.propVertex({ type: 'Literal', value: unmangle(exportedName) })
+            flowgraph.propVertex({type: 'Literal', value: unmangle(exportedName)})
         );
 }
 
@@ -383,7 +400,7 @@ Returns:
     A string, the relative import path to the project root directory
 */
 function getRelativePath(curPath, importPath) {
-    let relativePath = path.join(curPath, '..', importPath);
+    const relativePath = path.join(curPath, '..', importPath);
     return relativePath + '.js';
 }
 
@@ -408,7 +425,7 @@ Relevant docs:
 */
 function collectExportsImports(ast, expFuncs, impFuncs) {
     for (let i = 0; i < ast.programs.length; i++) {
-        let fname = ast.programs[i].attr.filename;
+        const fname = ast.programs[i].attr.filename;
 
         astutil.visit(ast.programs[i], function (nd) {
 
@@ -429,12 +446,14 @@ function collectExportsImports(ast, expFuncs, impFuncs) {
             if (astutil.isCallTo(nd, 'define')) {
                 // the last argument given to define is a function
                 const lastArg = nd.arguments[nd.arguments.length - 1];
-                if (!astutil.isFunction(lastArg))
+                if (!astutil.isFunction(lastArg)) {
                     return;
+                }
 
                 const retVals = astutil.getReturnValues(lastArg);
-                for (let retVal of retVals)
+                for (const retVal of retVals) {
                     addDefaultExport(expFuncs, fname, retVal);
+                }
             }
 
             // ES6
@@ -446,14 +465,14 @@ function collectExportsImports(ast, expFuncs, impFuncs) {
                 if (nd.source) {
                     const relativeImportPath = getRelativePath(fname, nd.source.value);
                     addRedirectExport(expFuncs, fname, relativeImportPath);
-                }
-                else if (nd.declaration) {
-                    if (nd.declaration.type === 'FunctionDeclaration')
+                } else if (nd.declaration) {
+                    if (nd.declaration.type === 'FunctionDeclaration') {
                         addNamedExport(expFuncs, fname, nd.declaration.id, nd.declaration.id.name);
-                }
-                else
-                    for (let specifier of nd.specifiers)
+                    }
+                } else
+                    for (let specifier of nd.specifiers) {
                         addNamedExport(expFuncs, fname, specifier.local, specifier.exported.name);
+                    }
             }
 
             if (nd.type === 'ExportAllDeclaration') {
@@ -464,10 +483,10 @@ function collectExportsImports(ast, expFuncs, impFuncs) {
 
             // require
             if (nd.type === 'VariableDeclarator') {
-                let init = nd.init;
+                const init = nd.init;
 
                 if (init && astutil.isCallTo(init, 'require')) {
-                    let requirePath = init.arguments[0].value;
+                    const requirePath = init.arguments[0].value;
                     if (requirePath && typeof requirePath === 'string') {
                         const relativeRequirePath = getRelativePath(fname, requirePath);
                         addDefaultImport(impFuncs, fname, relativeRequirePath, nd.id);
@@ -479,12 +498,12 @@ function collectExportsImports(ast, expFuncs, impFuncs) {
             if (nd.type === 'ImportDeclaration') {
                 const relativeImportPath = getRelativePath(fname, nd.source.value);
 
-                for (var i = 0; i < nd.specifiers.length; i++) {
+                for (let i = 0; i < nd.specifiers.length; i++) {
                     const specifier = nd.specifiers[i];
                     switch (specifier.type) {
                         case 'ImportSpecifier':
                             addNamedImport(impFuncs, fname, relativeImportPath,
-                                           specifier.local, specifier.imported.name);
+                                specifier.local, specifier.imported.name);
                             break;
                         case 'ImportDefaultSpecifier':
                             addDefaultImport(impFuncs, fname, relativeImportPath, specifier.local);
@@ -512,22 +531,27 @@ Postcondition:
 function connectImports(fg, expFuncs, impFuncs) {
     // console.log(expFuncs);
     // console.log(impFuncs);
-    for (let fname in impFuncs) {
-        for (let srcFname in impFuncs[fname]) {
-            if (!(srcFname in expFuncs))
+    for (const fname in impFuncs) {
+        for (const srcFname in impFuncs[fname]) {
+            if (!(srcFname in expFuncs)) {
                 continue;
+            }
 
             let imp = impFuncs[fname][srcFname];
 
-            for (let idNode of imp['default'])
+            for (let idNode of imp['default']) {
                 connectDefaultImport(expFuncs, fg, srcFname, idNode);
+            }
 
-            for (let importedName in imp['named'])
-                for (let local of imp['named'][importedName])
+            for (let importedName in imp['named']) {
+                for (let local of imp['named'][importedName]) {
                     connectNamedImport(expFuncs, fg, srcFname, local, importedName);
+                }
+            }
 
-            if (imp['entire'])
+            if (imp['entire']) {
                 connectEntireImport(expFuncs, fg, srcFname);
+            }
         }
     }
 }

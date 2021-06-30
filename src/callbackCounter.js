@@ -1,15 +1,20 @@
 const astutil = require('./astutil');
 
 exports.countCallbacks = function (ast) {
-    var callbacks = [], callbackUses = 0;
-    var enclosingFunctionParameters = [];
-    var functionDeclarationParameter = 0, functionExpressionParameter = 0;
+    const callbacks = [];
+    const enclosingFunctionParameters = [];
+
+    let callbackUses = 0;
+    let functionDeclarationParameter = 0;
+    let functionExpressionParameter = 0;
+
     astutil.visit(ast, function (node) {
         switch (node.type) {
             case 'CallExpression' :
                 //FIND ARGUMENT AS PARAMETER IN ENCLOSING FUNCTION.
-                var callee = node.callee, functionName = callee.name;
-                var enclosingFunctionParameter = findEnclosingFunctionParameter(callee, functionName);
+                const callee = node.callee;
+                const functionName = callee.name;
+                const enclosingFunctionParameter = findEnclosingFunctionParameter(callee, functionName);
                 if (enclosingFunctionParameter !== null) {
                     callbackUses++;
                     if (enclosingFunctionParameters.indexOf(enclosingFunctionParameter) === -1) {
@@ -28,19 +33,19 @@ exports.countCallbacks = function (ast) {
                 break;
         }
     });
-    var totalParameters = functionDeclarationParameter + functionExpressionParameter;
-    var callbackPercentage = callbacks.length / totalParameters * 100;
+    const totalParameters = functionDeclarationParameter + functionExpressionParameter;
+    const callbackPercentage = callbacks.length / totalParameters * 100;
     console.log("I found " + callbacks.length + " callbacks and " + callbackUses + " call back uses. In total we have " + functionDeclarationParameter + " function declaration parameters and " + functionExpressionParameter + " function expression parameters.");
     console.log("This makes a total of " + totalParameters + " parameters. Which means that (counting each function once as a callback) " + callbackPercentage + " percent of parameters are callbacks.");
 };
 
 function findEnclosingFunctionParameter(node, functionName) {
-    var enclosingFunction = node.attr.enclosingFunction;
+    const enclosingFunction = node.attr.enclosingFunction;
     if (!enclosingFunction) {
         return null;
     }
 
-    var matchingParameter = findFirst(enclosingFunction.params, isParameterWithName(functionName));
+    const matchingParameter = findFirst(enclosingFunction.params, isParameterWithName(functionName));
     if (matchingParameter !== null) {
         return matchingParameter;
     }
@@ -49,7 +54,7 @@ function findEnclosingFunctionParameter(node, functionName) {
 }
 
 function findFirst(array, predicate) {
-    var soughtElement = null;
+    let soughtElement = null;
     array.forEach(function (element) {
         if (predicate(element) === true) {
             soughtElement = element;

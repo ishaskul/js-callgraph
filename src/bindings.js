@@ -13,10 +13,10 @@ const astutil = require('./astutil');
 const symtab = require('./symtab');
 
 function addBindings(ast) {
-    var global_scope = new symtab.Symtab();
+    const global_scope = new symtab.Symtab();
     global_scope.global = true;
-    var scope = global_scope;
-    var decl_scope = scope;
+    let scope = global_scope;
+    let decl_scope = scope;
     astutil.visitWithState(ast,
         function enter(nd, doVisit, state) {
             switch (nd.type) {
@@ -32,7 +32,7 @@ function addBindings(ast) {
                 // FALL THROUGH
                 case 'FunctionExpression':
                 case 'ArrowFunctionExpression':
-                    var old_decl_scope = decl_scope;
+                    const old_decl_scope = decl_scope;
                     scope = decl_scope = new symtab.Symtab(scope);
                     scope.global = false;
 
@@ -57,10 +57,11 @@ function addBindings(ast) {
                     );
 
                     state['withinParams'] = true;
-                    for (var i = 0; i < nd.params.length; ++i) {
+                    for (let i = 0; i < nd.params.length; ++i) {
                         // Handle identifer as before
-                        if (nd.params[i].type === 'Identifier')
+                        if (nd.params[i].type === 'Identifier') {
                             decl_scope.set(nd.params[i].name, nd.params[i]);
+                        }
 
                         // Always visit nd.params[i]
                         // Case 1: If nd.params[i] is an Identifer, visit it to set its scope attribute
@@ -116,15 +117,17 @@ function addBindings(ast) {
                     and property is an Identifier.
                     */
                     doVisit(nd.object);
-                    if (nd.computed)
+                    if (nd.computed) {
                         doVisit(nd.property);
+                    }
                     return false;
 
                 case 'VariableDeclarator':
-                    // If nd.id is an Identifer and its name hasn't been declared in the scope, set its name in the scope
+                    // If nd.id is an Identifier and its name hasn't been declared in the scope, set its name in the scope
                     // Re-declaration of a variable in the same scope is ignored
-                    if (nd.id.type === 'Identifier' && !decl_scope.hasOwn(nd.id.name))
+                    if (nd.id.type === 'Identifier' && !decl_scope.hasOwn(nd.id.name)) {
                         decl_scope.set(nd.id.name, nd.id);
+                    }
 
                     // visit both nd.id and nd.init
                     // nd.id
@@ -149,9 +152,9 @@ function addBindings(ast) {
                     for (let prop of nd.properties) {
                         if ((state['withinDeclarator'] || state['withinParams']) &&
                             prop.value.type === 'Identifier' &&
-                            !decl_scope.hasOwn(prop.value.name))
+                            !decl_scope.hasOwn(prop.value.name)) {
                             decl_scope.set(prop.value.name, prop.value);
-
+                        }
                         doVisit(prop.value);
                     }
                     return false;
@@ -168,8 +171,9 @@ function addBindings(ast) {
                         if (elm) {
                             if ((state['withinDeclarator'] || state['withinParams']) &&
                                 elm.type === 'Identifier' &&
-                                !decl_scope.hasOwn(elm.name))
+                                !decl_scope.hasOwn(elm.name)) {
                                 decl_scope.set(elm.name, elm);
+                            }
 
                             doVisit(elm);
                         }
@@ -178,7 +182,7 @@ function addBindings(ast) {
 
                 case 'Property':
                     // Temporary fix for computed property names
-                    // visit nd.key to avoid scope of identifer in computed property names being undefined
+                    // visit nd.key to avoid scope of identifier in computed property names being undefined
                     doVisit(nd.key);
                     doVisit(nd.value);
                     return false;

@@ -1,5 +1,5 @@
 /*
-Array destructuing: ignoring some return values
+Array destructuring: ignoring some return values
 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
 */
 function main () {

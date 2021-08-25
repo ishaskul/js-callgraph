@@ -1,5 +1,5 @@
 /*
-Object destructuing: assign without declaration
+Object destructuring: assign without declaration
 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
 */
 function main () {

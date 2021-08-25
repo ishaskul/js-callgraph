@@ -105,7 +105,6 @@ function buildCallGraph(ast) {
     mod.connectImports(fg, expFuncs, impFuncs);
 
     addInterproceduralFlowEdges(ast, fg);
-
     return callgraph.extractCG(ast, fg);
 }
 

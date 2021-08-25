@@ -211,14 +211,39 @@ function addNamedExport(expFuncs, fname, local, exportedName) {
 Args:
          expFuncs - A dictionary storing export info with file names being keys
             fname - A string, name of the enclosing file of the export statement
-    redirectFnaem - A string, full path to the file being exported
+    redirectFname - A string, full path to the file being exported
 */
 function addRedirectExport(expFuncs, fname, redirectFname) {
     if (!(fname in expFuncs)) {
         addFileToExports(expFuncs, fname);
     }
-
     expFuncs[fname]['redirect'].push(redirectFname);
+}
+
+/* Adds an entire export to expFuncs
+
+expFuncs[fname][srcFname]['entire'] is a Boolean
+since multiple entire imports are equivalent to any single one of them
+
+Example:
+    export * as a from "module";
+    export * as b from "module";
+
+Args:
+         expFuncs - A dictionary storing export info with file names being keys
+            fname - A string, name of the enclosing file of the export statement
+         srcFname - A string, absolute path of the file being imported
+ */
+function addEntireExport(expFuncs, fname, nd, relativePath) {
+    if (!(fname in expFuncs)) {
+        expFuncs[fname] = {};
+    }
+
+    if (!(nd.source.value in expFuncs[fname])) {
+        addFileToExports(expFuncs, fname);
+    }
+
+    expFuncs[fname]['redirect'].push(relativePath);
 }
 
 /* Add a default import to impFuncs
@@ -286,7 +311,7 @@ function addNamedImport(impFuncs, fname, srcFname, local, importedName) {
     }
 }
 
-/* Add a entire import to impFuncs
+/* Add an entire import to impFuncs
 
 impFuncs[fname][srcFname]['entire'] is a Boolean
 since multiple entire imports are equivalent to any single one of them
@@ -376,7 +401,6 @@ function connectEntireImport(expFuncs, fg, srcFname) {
     if (!(srcFname in expFuncs)) {
         return;
     }
-
     for (let redirectFname of expFuncs[srcFname]['redirect']) {
         connectEntireImport(expFuncs, fg, redirectFname);
     }
@@ -401,7 +425,10 @@ Returns:
 */
 function getRelativePath(curPath, importPath) {
     const relativePath = path.join(curPath, '..', importPath);
-    return relativePath + '.js';
+    if (relativePath.endsWith('.js')){
+        return relativePath;
+    }
+    else return relativePath + '.js';
 }
 
 /* Iterate ast and collect export info into expFuncs
@@ -426,7 +453,6 @@ Relevant docs:
 function collectExportsImports(ast, expFuncs, impFuncs) {
     for (let i = 0; i < ast.programs.length; i++) {
         const fname = ast.programs[i].attr.filename;
-
         astutil.visit(ast.programs[i], function (nd) {
 
             /* -------------- exports -----------------*/
@@ -476,7 +502,8 @@ function collectExportsImports(ast, expFuncs, impFuncs) {
             }
 
             if (nd.type === 'ExportAllDeclaration') {
-                // TODO
+                const relativeImportPath = getRelativePath(fname, nd.source.value);
+                addEntireExport(expFuncs, fname, nd, relativeImportPath);
             }
 
             /* -------------- imports -----------------*/
@@ -529,8 +556,6 @@ Postcondition:
     exported value have been added to the flowgraph
 */
 function connectImports(fg, expFuncs, impFuncs) {
-    // console.log(expFuncs);
-    // console.log(impFuncs);
     for (const fname in impFuncs) {
         for (const srcFname in impFuncs[fname]) {
             if (!(srcFname in expFuncs)) {

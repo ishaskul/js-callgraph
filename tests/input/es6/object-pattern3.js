@@ -1,5 +1,5 @@
 /*
-Object destructuing: assigning to new variable names
+Object destructuring: assigning to new variable names
 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
 */
 function main () {

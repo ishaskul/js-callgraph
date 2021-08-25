@@ -1,12 +1,11 @@
 /*
-Array destructuring: assignment separate from declaration
+Array destructuring: using rest parameter
 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
 */
 function main () {
-	let b;
-	const a = [ () => { return 1; } ];
-	[b] = a;
-	b();
+	let a, b, rest;
+	let f = () => {return [10, 20, 30, 40, 50]}
+	[a, b, ...rest] = f();
 }
 
 main();

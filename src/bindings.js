@@ -144,12 +144,18 @@ function addBindings(ast) {
                     // ES6 Object Destructuring
                     // { key: value }
                     // The newly declared name is always in value
-                    // Haven't tested with rest and default params
 
                     // Only visit this node if it's
                     // within VariableDeclarator or
                     // within params
                     for (let prop of nd.properties) {
+                        // This handles cases when a rest parameter is used
+                        // since a rest parameter doesn't have either a key or value,
+                        // and the argument contains data needed for both, we make 2 new fields
+                        if(prop.argument !== undefined) {
+                            prop.value = prop.argument;
+                            prop.key = prop.argument;
+                        }
                         if ((state['withinDeclarator'] || state['withinParams']) &&
                             prop.value.type === 'Identifier' &&
                             !decl_scope.hasOwn(prop.value.name)) {
@@ -161,7 +167,6 @@ function addBindings(ast) {
 
                 case 'ArrayPattern':
                     // ES6 Array Destructuring
-                    // Haven't tested with rest and default params
 
                     // Only visit this node if it's
                     // within VariableDeclarator or

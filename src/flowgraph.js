@@ -137,7 +137,6 @@ function addIntraproceduralFlowGraphEdges(ast, flow_graph) {
                     break;
 
                 // ES6 rule, similar to object expression
-                // Currently don't support rest and default params
                 case 'ObjectPattern':
                     for (let prop of nd.properties) {
                         // Assuming prop.key and prop.value are Identifiers
@@ -146,7 +145,6 @@ function addIntraproceduralFlowGraphEdges(ast, flow_graph) {
                     break;
 
                 // ES6 rule, similar to array expression
-                // Currently don't support rest and default params
                 case 'ArrayPattern':
                     for (let i = 0; i < nd.elements.length; i++) {
                         // Array destructuring can ignore some values, so check null first
@@ -166,7 +164,18 @@ function addIntraproceduralFlowGraphEdges(ast, flow_graph) {
                     break;
 
                 case 'WithStatement':
-                // throw new Error("'with' statement not supported");
+                    //supposedly, this should have enabled with statement support, however, this makes no difference
+                    //in the callgraph
+                    /*
+                    let blockStatementElements = nd.body.body;
+                    for(let element of blockStatementElements){
+                        console.log(element.expression);
+                        if (nd.object.type==='Identifier'){
+                            flow_graph.addEdge(globVertex(nd.object),vertexFor(element.expression.right));
+                        }
+                    }
+                    */
+                    break;
             }
         }
     );

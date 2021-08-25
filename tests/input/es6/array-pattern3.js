@@ -1,5 +1,5 @@
 /*
-Array destructuing: parsing an array returned from a function
+Array destructuring: parsing an array returned from a function
 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
 */
 function main () {

@@ -1,14 +1,11 @@
 language: node_js
+dist: bionic
 addons:
   apt:
     sources:
       - deadsnakes
-    packages:
-      - python3.7
 node_js:
   - 14
-before_install:
-  - python3.7 --version
 install:
   - npm install
 script:

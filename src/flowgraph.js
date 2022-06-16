@@ -53,7 +53,9 @@ function addIntraproceduralFlowGraphEdges(ast, flow_graph) {
                     break;
 
                 case 'CatchClause':
-                    flow_graph.addEdge(unknownVertex(), varVertex(nd.param));
+                    if(nd.param){
+                        flow_graph.addEdge(unknownVertex(), varVertex(nd.param));
+                    }
                     break;
 
                 // R3

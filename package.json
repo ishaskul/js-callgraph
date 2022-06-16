@@ -16,7 +16,7 @@
     "jest": "^27.0.5"
   },
   "scripts": {
-    "test": "jest && python3.7 ./tests/test.py"
+    "test": "jest && python3 ./tests/test.py"
   },
   "jest": {
     "testRegex": "tests/input/jest/.*\\.(js|jsx)$"

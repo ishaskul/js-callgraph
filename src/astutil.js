@@ -113,7 +113,7 @@ function init(root) {
                 shorthand: boolean;
             }
         */
-        if (nd.type === 'FunctionExpression' && parent.type === 'Property') {
+        if (nd.type === 'FunctionExpression' && parent && parent.type === 'Property') {
             if (!parent.computed) {
                 if (parent.key.type === 'Identifier') {
                     nd.id = parent.key;

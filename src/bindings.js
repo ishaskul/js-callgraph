@@ -94,7 +94,9 @@ function addBindings(ast) {
                 case 'CatchClause':
                     scope = new symtab.Symtab(scope);
                     scope.global = false;
-                    scope.set(nd.param.name, nd.param);
+                    // catch claucse might not have paramater
+                    if(nd.param)
+                        scope.set(nd.param.name, nd.param);
 
                     doVisit(nd.param);
                     doVisit(nd.body);

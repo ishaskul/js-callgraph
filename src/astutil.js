@@ -280,11 +280,11 @@ function reportError(msg, err) {
 To avoid confusion caused by too many different parsing settings,
 please call this function whenever possible instead of rewriting esprima.parseModule...
 */
-function parse(src) {
+function parse(src,jsxCheck) {
     return tsEstree.parse(src, {
         loc: true,
         range: true,
-        jsx: true
+        jsx: jsxCheck
     });
 }
 
@@ -316,7 +316,8 @@ function buildProgram(fname, src) {
     // parse javascript
     if (prog === undefined) {
         try {
-            prog = parse(src);
+            (fname.endsWith(".tsx") || fname.endsWith(".jsx"))? prog = parse(src,true) : prog = parse(src,false);
+
         } catch (err) {
             reportError('Warning: Parsing failed for' + fname, err);
             return null;

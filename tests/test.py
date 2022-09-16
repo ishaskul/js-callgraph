@@ -19,11 +19,12 @@ test_dirs = ['basics',
              'import-export/es6',
              'import-export/module.exports',
              'typescript',
+             'JSX',
 #              'vue'
              ]
 
 # Only consider test cases in the following languages
-langs = ['*.js', '*.ts', '*.vue']
+langs = ['*.js', '*.ts', '*.vue','*.jsx','*.tsx']
 
 # -------------------------------------------
 

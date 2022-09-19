@@ -210,6 +210,16 @@ function funcname(func) {
     if (func === undefined) {
         console.log('WARNING: func undefined in astutil/funcname.');
     } else if (func.id === null) {
+        const parent = func?.attr?.parent;
+        if (parent?.type === 'AssignmentExpression') {
+            if( parent?.left?.type == 'Identifier') {
+                return parent.left.name;
+            }
+        } else if (parent?.type == 'VariableDeclarator') {
+            if( parent?.id?.type == 'Identifier') {
+                return parent.id.name;
+            }
+        }
         return "anon";
     }
     return func.id.name;
@@ -217,12 +227,9 @@ function funcname(func) {
 
 // encFunc can be undefined
 function encFuncName(encFunc) {
-    if (encFunc === undefined) {
+    if (encFunc === undefined)
         return "global";
-    } else if (encFunc.id === null) {
-        return "anon";
-    }
-    return encFunc.id.name
+    return funcname(encFunc);
 }
 
 /* Pretty-print position. */

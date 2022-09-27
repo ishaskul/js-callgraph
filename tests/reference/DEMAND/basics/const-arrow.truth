@@ -1,1 +1,1 @@
-'global' (const-arrow.js@3:39-52) -> 'arrowFunc' (const-arrow.js@1:18-36)
+const-arrow.js:global:3 -> const-arrow.js:arrowFunc:1

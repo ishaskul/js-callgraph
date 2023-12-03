@@ -165,10 +165,8 @@ let build = function () {
     if (args.time) console.time("callgraph");
     let cg;
     if (args.strategy === 'NONE' || args.strategy === 'ONESHOT') {
-        console.log("NONE strat");
         cg = pessimistic.buildCallGraph(ast, args.strategy === 'NONE');
         edgesOfFunctionsCalled = retrieveAllCalledFunctionsACG(cg);
-        //fs.writeFileSync(filePath, JSON.stringify(edgesOfFunctionsCalled, null, 2));
     } else if (args.strategy === 'DEMAND') {
         cg = semioptimistic.buildCallGraph(ast);
         if (args.analyzertype === "nativecalls" ) {
@@ -176,7 +174,6 @@ let build = function () {
         } else if (args.analyzertype === "static") {
             edgesOfFunctionsCalled = retrieveAllCalledFunctionsStatic(cg);
         }
-         //fs.writeFileSync(filePath, JSON.stringify(edgesOfFunctionsCalled, null, 2));
     }
     var outputFilename = this.args.output[0];
     var matchRegex = outputFilename.match(/^(.*\/)([^\/]+\.json)$/); // Extract the output directory from the filename pased from Lacuna

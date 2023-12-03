@@ -88,6 +88,13 @@ argParser.add_argument(
     }
 );
 
+argParser.add_argument(
+    '-t', '--analyzertype',
+    {   
+        help: 'type of analyser for lacuna; one of native, non-native or acg'
+    }
+);
+
 let r = argParser.parse_known_args();
 const args = r[0];
 const inputList = r[1];

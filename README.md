@@ -1,194 +1,179 @@
-# Lacuna 
-An approach for JavaScript dead code elimination, where existing JavaScript analysis techniques are applied in combination.
-
-## Publications about Lacuna
-
-A in-depth description of the Lacuna approach, its implementation, its internal and external evaluation, and an empirical study on the overhead of JavaScript dead code on the energy and performance of mobile Web apps, please refer to the following publication:
-- Ivano Malavolta, Kishan Nirghin, Gian Luca Scoccia, Simone Romano, Salvatore Lombardi (2023). JavaScript Dead Code Identification, Elimination, and Empirical Assessment. IEEE Transactions on Software Engineering (TSE) - [PDF](http://www.ivanomalavolta.com/files/papers/TSE_2023.pdf)
-
-The main principles, structure, and empirical evaluation of a first version of Lacuna are available in the following scientific publication:
-- Niels Groot Obbink, Ivano Malavolta, Gian Luca Scoccia, Patricia Lago (2018). An Extensible Approach for Taming the Challenges of JavaScript Dead Code Elimination. In Software Analysis, Evolution and Reengineering (SANER), 2018 IEEE 25th International Conference on, pp. 291–401 - [PDF](https://github.com/S2-group/Lacuna/blob/master/publications/SANER_2018.pdf) 
+# Field-based Call Graph Construction for JavaScript #
 
 
+[![Build Status](https://travis-ci.com/gaborantal/js-callgraph.svg?branch=master)](https://travis-ci.com/github/gaborantal/js-callgraph)
+[![Node.js Package](https://github.com/gaborantal/js-callgraph/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/gaborantal/js-callgraph/actions/workflows/npm-publish.yml)
+[![NPM version](https://img.shields.io/npm/v/jscg)](https://www.npmjs.com/package/jscg)
+[![License](https://img.shields.io/badge/license-EPL--2.0-green.svg)](https://www.eclipse.org/legal/epl-2.0/)
 
-If Lacuna is helping your research, consider to cite it as follows, thanks!
+This project implements a field-based call graph construction algorithm for JavaScript as described in
 
-``` 
-@article{TSE_2023, 
-author={Ivano Malavolta and Kishan Nirghin and {Gian Luca} Scoccia and Simone Romano and Salvatore Lombardi and Giuseppe Scanniello and Patricia Lago}, 
-journal={IEEE Transactions on Software Engineering}, 
-title={{JavaScript Dead Code Identification, Elimination, and Empirical Assessment}}, 
-year={2023}, 
-doi={10.1109/TSE.2023.3267848}, 
-url = {http://www.ivanomalavolta.com/files/papers/TSE_2023.pdf}
-}
+> A. Feldthaus, M. Schäfer, M. Sridharan, J. Dolby, F. Tip. Efficient Construction of Approximate Call Graphs for JavaScript IDE Services. In *ICSE*, 2013.
 
-@inproceedings{SANER_2018,
-  url = { https://github.com/S2-group/Lacuna/blob/master/publications/SANER_2018.pdf },
-  organization = { IEEE },
-  year = { 2018 },
-  pages = { 291--401 },
-  booktitle = { Software Analysis, Evolution and Reengineering (SANER), 2018 IEEE 25th International Conference on },
-  author = { Niels Groot Obbink and Ivano Malavolta and Gian Luca Scoccia and Patricia Lago },
-  title = { An Extensible Approach for Taming the Challenges of JavaScript Dead Code Elimination },
-}
+This repo builds upon [Max Schaefer](https://github.com/xiemaisi)'s original [acg.js](https://github.com/xiemaisi/acg.js) and adds
+
+* ES6 Support
+	* Arrow functions
+	* Destructuring assignments
+	* Classes
+	* Enhanced object literals
+	* Rest/Spread operator
+* Module Support
+	* ES6/CommonJS/AMD
+* More sophisticated scoping
+* Partial update to a large call graph
+* Unified JSON format representing a call graph
+* More flexible CLI
+	* Take directory parameter
+	* Support filtering files by regex
+* Vue.js support (.vue files)
+* More tests
+
+## Get Started (CLI)
+```
+npm install -g jscg
+jscg -h # for a list of command line arguments
+
+# Running on simple input scripts
+jscg --cg input-scripts/simple-scripts/functioncall-arithmetic.js
+
+# Running on a whole directory
+jscg --cg input-scripts/fullcalendar/
+
+# Running on mixed input
+jscg --cg input-scripts/fullcalendar/fullcalendar/ input-scripts/fullcalendar/lib/jquery-2.1.0.js
+
+# Saving the result into a file
+jscg --cg input-scripts/simple-scripts/functioncall-arithmetic.js --output filename.json
+
+# Running on a whole directory with filtering
+jscg --cg input-scripts/fullcalendar/ --filter filename.filter
 ```
 
-## Installation
-Install the dependent libraries `npm install`
+For an example of the output json, please see [here](#unified-json-format).
+For an example of filtering file, please see [here](#filter-file-format).
 
-Install the dependencies for the different analysers (should only be necessary
-if you want to use them)
-- `npm --prefix ./analyzers/static install ./analyzers/static`
-- `npm --prefix ./analyzers/dynamic install ./analyzers/dynamic`
-- `npm --prefix ./analyzers/nativecalls install ./analyzers/nativecalls`
-- `npm --prefix ./analyzers/wala_full install ./analyzers/wala_full`
-- `npm --prefix ./analyzers/wala_single install ./analyzers/wala_single`
+## Programming Interface
 
-### Resolutions for common issues which might be encountered during the dynamic analyzer installation 
-- If the dynamic analyser installation fails, try installing it by ignoring the scripts
-`npm --prefix ./analyzers/dynamic install ./analyzers/dynamic --ignore-scripts`
-
-- Make sure to have chromium web browser installed before using this analyzer
-
-## How to use
-The intuition is that lacuna runs on a source folder; Relative to this folder 
-it will will look for the entry file. From the entry file, all references to 
-JS files and all inline JS scripts will be considered for optimization.
-
-__Thus all files that are not referenced by the entry file will be skipped__
-
-E.g. `node ./lacuna ./example/test -d ./example/test.output -a static -o 3`
-This command will optimize the source code with strength 3 (powerfull 
-optimization, that will eliminate as much as possible from the source). Whilst
-preserving the original sourceCode since a custom destinationFolder is set.
-
-### Lazy loading
-Since there is no guarantee Lacuna will not remove a function that isn't really
-dead, Lacuna features a lazyLoading option.
-
-This means that instead of completely removing the presumed dead functions, it 
-will replace it with a lazy loading mechanism that will fetch the functionBody
-from a server and insert it right back into your application.
-
-Thus ensuring not to break the application whilst still removing many 
-unnecessary lines of code.
-
-To enable lazyloading set the optimization level (--olevel -o) to 1.
-After Lacuna has optimized your application, ensure to run the lazyloading_server
-which will serve all swapped out functionBody's on demand.
-
-Find the generated lazyload_server in the destination folder;
-also make sure to install the dependent npm modules: express, fs, body-parser and path.
-
-Example
 ```
-node lacuna ./example/proj1 -a static -o 1 -d ./example/proj1_output -f
-npm --prefix ./example/proj1_output install express fs body-parser path
-node-dev ./example/proj1_output/lacuna_lazyload_server.js
+const JCG = require("./src/runner");
+args = { ... };
+JCG.setArgs(args);                                # Optional, specify a list of arguments
+JCG.setFiles(['file.js', 'directory/']);          # List of files or directories to analyze
+JCG.setFilter(['-test[^\.]*.js', '+test576.js']); # Optional, please see "Filter file format" section for details
+JCG.setConsoleOutput(true);                       # Optional, the console output can be turned off.
+JCG.build();                                      # build returns the call graph as a JSON object, please see "Unified JSON Format" section
 ```
 
-### Runtime options
+## Running Tests
+To run the testing framework run:
+```
+npm test
+```
+To install the git hooks to run tests automatically pre-commit run:
+```
+scripts/install-hooks
+```
+## Structure
 
-| Long          | Short | Description                                                    | Default                  |
-|---------------|-------|----------------------------------------------------------------|--------------------------|
-| --analyzer    | -a    | Specify analyzers (multiple allowed, space separated).         | <REQUIRED>               |
-| --olevel      | -o    | Optimization level                                             | 0                        |
-| --entry       | -e    | The entry file, where the JS scripts should be gathered from.  | index.html               |
-| --destination | -d    | Perform changes in a copy of the sourceFolder.                 | <sourceFolder>           |
-| --logfile     | -l    | Logs of Lacuna execution.                                      | lacuna.log               |
-| --force       | -f    | Force continuing                                               | false                    |
+The call graph constructor can be run in two basic modes (selected using the `--strategy` flag to `javascript-call-graph`), *pessimistic* and *optimistic*, which differ in how interprocedural flows are handled. In the basic pessimistic approach (strategy `NONE`), interprocedural flow is not tracked at all; a slight refinement is strategy `ONESHOT`, where interprocedural flow is tracked only for one-shot closures that are invoked immediatel. The optimistic approach (strategy `DEMAND`) performs interprocedural propagation along edges that may ultimately end at a call site (and are thus interesting for call graph construction). Full interprocedural propagation (strategy `FULL`) is not implemented yet.
 
-#### Analyzer
-The analyzers are the techniques that Lacuna applies to mark functions/nodes as 
-alive and determine caller-callee relationships between functions.
+All strategies use the same intraprocedural flow graph, in which properties are only identified by name; thus, like-named properties of different objects are conflated; this can lead to imprecise call graphs. Dynamic property reads and writes are ignored, as are reflective calls using `call` and `apply`; thus, the call graphs are intrinsically incomplete.
 
-When multiple analysers are chosen Lacuna merges the results to minimize false
-positves. This means that any function that is picked up as alive by ANY 
-analyser will be considered alive.
+Module `flowgraph.js` contains the code for extracting an intraprocedural flow graph from an [Esprima](esprima.org) AST annotated with name bindings for local variables (see `bindings.js`, which uses `symtab.js` and `astutil.js`).
 
-The currently available analyser options are
-##### static
-This analyzer is based on esprima and statically determines all caller -> callee
-relationships between functions. It does not consider JavaScript native
-functions.
+Modules `pessimistic.js` and `semioptimistic.js` implement the pessimistic and optimistic call graph builders, respectively. They both use `flowgraph.js` to build an intraprocedural flow graph, and then add some edges corresponding to interprocedural flow. Both use module `callgraph.js` for extracting a call graph from a given flow graph, by collecting, for every call site, all functions that can flow into the callee position. Both use module `natives.js` to add flow edges modelling well-known standard library functions.
 
-##### nativecalls
-Very similair to the static analyzer wich the main difference is that it only
-considers JavaScript native functions.
+The remaining modules define key data structures, in several variants.
 
-##### dynamic
-A basic dynamic analyzer that starts up a puppeteer webdriver and marks every
-function that is executed on startup as alive.
+Module `graph.js` implements graphs using adjacency sets, using sets of numbers as implemented by `numset.js`. The latter includes either `olist.js` to implement sets as ordered lists of numbers, or `bitset.js` to use bitsets (with disappointing performance, so we use ordered lists by default).
 
-##### wala
-Based on the internal callgraphs of IBM WALA
+Modules `dftc.js`, `heuristictc.js` and `nuutila.js` implement several transitive closure algorithms used by `callgraph.js`. By default, we use `dftc.js` which uses a simple, depth first-search based algorithm. `heuristictc.js` does something even simpler, which is very fast but unsound. Finally, `nuutila.js` implements Nuutila's algorithm for transitive closure, which for our graphs is usually slower than the depth first-based ones.
 
-##### TAJS
-Based on TAJS
-Some notable fixes are:
-by default TAJS stops processing JavaScript files whenever it encounters a console.log
-( maybe also other native JavaScript calls ); thus to bypass this issue TAJS was modified.
+## Unified JSON Format
 
+```
+[ # The calls are represented with a list of objects. Each call is an object in this list.
+  {
+    "source": { # The source object represents the start point of a call (the caller node)
+      "label": "global",
+      "file": "...\\input-scripts\\simple-scripts\\functioncall-arithmetic.js",
+      "start": { # The start point of the source with row-column based position.
+        "row": 7,
+        "column": 4
+      },
+      "end": { # The end point of the source node with row-column based position.
+        "row": 7,
+        "column": 8
+      },
+      "range": { # The position of the source node in index-based representation.
+        "start": 59,
+        "end": 63
+      }
+    },
+    "target": { # The target object represents the end point of a call (this node is called by the source)
+      "label": "f",
+      "file": "...\\input-scripts\\simple-scripts\\functioncall-arithmetic.js",
+      "start": { # The start point of the target node with row-column based position..
+        "row": 3,
+        "column": 0
+      },
+      "end": { # The end point of the target node with row-column based position.
+        "row": 5,
+        "column": 1
+      },
+      "range": { # The position of the target node in index-based representation.
+        "start": 14,
+        "end": 51
+      }
+    }
+  }
+]
+```
 
-#### Optimization Level
-After the deadfunctions have been identified, Lacuna can also optimize the 
-application by (partially) removing the dead functions. For this optimization, 
-Lacuna supports multiple levels of caution.
+## Filter file format
 
-- 0: Do not optimize at all
-- 1: Replace the function body with a lazy loading mechanism
-- 2: Remove the function body
-- 3: Replace the function definition with null
+Any valid regular expression can be specified in the filter file. The order of the including and excluding lines are important since they are processed sequentially.
 
-Since there is no guarantee that Lacuna will not yield false positives e.g.
-that it thinks a function that is really alive is dead, removing the functions
-entirely could break the application.
+The first character of each line represents the type of the filtering:
+```
+# Comment line
+- Exclude
++ Include
+```
 
-#### Entry
-The entry file, relative to the sourceFolder, that will serve as a starting 
-point for Lacuna. From this file all references to JS files will be gathered,
-as well as the inline JS scripts; after which they will be considered for 
-optimization.
+An example for filtering:
 
-#### Destination
-By default Lacuna will be performed on the sourceFolder. Meaning that it will
-actually Modify the original source code. Setting a destination will copy the
-entire project to this folder and do all modifications on that folder instead.
-(preserving the original code).
+```
+# Filter out all source files starting with "test":
+-test[^\.]*.js
+# But test576.js is needed:
++test576.js
+# Furthermore, files beginning with "test1742" are also needed:
++test1742[^\.]*.js
+# Finally, test1742_b.js is not needed:
+-test1742_b.js
+```
 
-#### Logfile
-Where the output of Lacuna will be stored. By default in `lacuna.log`
+## List of arguments
 
-#### Force
-When the force option is enabled, Lacuna will without warning overwrite any
-files or folders. (Instead of the default to prompt it to the user)
+```
+-h         : List of command line arguments
+--fg       : print flow graph
+--cg       : print call graph
+--time     : print timings
+--strategy : interprocedural propagation strategy; one of NONE, ONESHOT (default), DEMAND, and FULL (not yet implemented)
+--countCB  : Counts the number of callbacks.
+--reqJs    : Make a RequireJS dependency graph.
+--output   : The output file name into which the result JSON should be saved. (extension: .json)
+--filter   : Path to the filter file.
+--analyzerType : type of analyser for lacuna; one of native, non-native or acg
+```
 
-### Settings
-Some more customizable settings can be found in the _settings.js file
-a few important settings are:
+# Contributing
 
-#### CONSIDER_ONLINE_JS_FILES
-Whether Lacuna should take the JS files hosted on other servers into account.
-e.g. referenes to CDN files, or simply hosted somewhere else for performance.
+Looking to contribute something? [Here's how you can help](/CONTRIBUTING.md).
 
-The current implementation of Lacuna will download these files and update all
-inline HTML references with the local file. The files will be downloaded to the
-root of the destination directory under their original filename.
+# License #
 
-Notice that having multiple references to:
-https://code.jquery.com/jquery-3.4.0.min.js
-
-will store them in the same local file under the name jquery-3.4.0.min.js.
-
-## Development
-
-### Open issues
-- Identifying scripts within HTML currently fails when there are (extra?) spaces 
-or linebreaks between the words
-
-### Solved issues
-- The dynamic analyzer that requires a webdriver doesn't seem to load external
-JS files in headless mode. The work around currently used is to not run the 
-browser in headless mode; which has the anoying consequence that it activates/
-focusses the window on every run. 
+This code is licensed under the [Eclipse Public License (v2.0)](http://www.eclipse.org/legal/epl-2.0), a copy of which is included in this repository in file `LICENSE`.

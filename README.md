@@ -167,7 +167,7 @@ An example for filtering:
 --reqJs    : Make a RequireJS dependency graph.
 --output   : The output file name into which the result JSON should be saved. (extension: .json)
 --filter   : Path to the filter file.
---analyzerType : type of analyser for lacuna; one of native, non-native or acg
+--analyzerType : type of analyser for lacuna; one of native, static or acg
 ```
 
 # Contributing
